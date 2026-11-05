@@ -1,0 +1,1548 @@
+<title>ZenSteam</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Kaushan+Script&display=swap">
+<style>
+/* Layout: consola de despacho — barra de pestañas arriba; plano de zonas a la izquierda, rutas de los autos a la derecha */
+:root {
+  --bg: #F3F6F6;
+  --surface: #FFFFFF;
+  --sunk: #E8EEEE;
+  --line: #D3DCDC;
+  --fg: #142024;
+  --muted: #5B6B70;
+  --accent: #0B6E78;
+  --accent-ink: #FFFFFF;
+  --car1: #0E8A6E;
+  --car2: #C26A00;
+  --car3: #6A4FC4;
+  --car4: #1F5FBF;
+  --car5: #B0306A;
+  --car6: #5E7A00;
+  --car7: #8A5A2B;
+  --car8: #3F4BA8;
+  --ok: #1F7A3A;
+  --warn: #A86400;
+  --bad: #B3261E;
+  --bad-soft: #FBE9E7;
+  --warn-soft: #FFF3DC;
+  --ok-soft: #E3F3E7;
+  --info-soft: #E2F0F1;
+  --brand: #E35F3A;
+  --script: "Kaushan Script", "Brush Script MT", cursive;
+  --display: "Barlow Condensed", "Arial Narrow", system-ui, sans-serif;
+  --body: "Barlow", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+  --r: 6px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0E1517; --surface: #152022; --sunk: #1B292C; --line: #2A3B3F;
+    --fg: #E4EEEF; --muted: #93A6AA; --brand: #FF7D55; --accent: #4FC3CF; --accent-ink: #062226;
+    --car1: #3FD0A8; --car2: #F2A23C; --car3: #A991F5;
+    --car4: #6FA8FF; --car5: #F07AAE; --car6: #B5D45A; --car7: #D9A26E; --car8: #8F9BFF;
+    --ok: #6BD38A; --warn: #F2B45A; --bad: #FF8A80;
+    --bad-soft: #3A1C1A; --warn-soft: #3A2C12; --ok-soft: #16301F; --info-soft: #173033;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0E1517; --surface: #152022; --sunk: #1B292C; --line: #2A3B3F;
+  --fg: #E4EEEF; --muted: #93A6AA; --brand: #FF7D55; --accent: #4FC3CF; --accent-ink: #062226;
+  --car1: #3FD0A8; --car2: #F2A23C; --car3: #A991F5;
+  --car4: #6FA8FF; --car5: #F07AAE; --car6: #B5D45A; --car7: #D9A26E; --car8: #8F9BFF;
+  --ok: #6BD38A; --warn: #F2B45A; --bad: #FF8A80;
+  --bad-soft: #3A1C1A; --warn-soft: #3A2C12; --ok-soft: #16301F; --info-soft: #173033;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 15px; line-height: 1.45; }
+.wrap { max-width: 1280px; margin: 0 auto; padding-inline: 16px; padding-block: 0 48px; }
+h1, h2, h3 { font-family: var(--display); font-weight: 600; letter-spacing: .01em; margin: 0; text-wrap: balance; }
+h2 { font-size: 1.45rem; }
+h3 { font-size: 1.15rem; }
+.mono, .num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.muted { color: var(--muted); }
+.small { font-size: .85rem; }
+.eyebrow { font-family: var(--body); font-size: .72rem; font-weight: 600; text-transform: uppercase; letter-spacing: .09em; color: var(--muted); }
+
+/* Encabezado */
+header.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: var(--bg); border-bottom: 1px solid var(--line); }
+.top-in { max-width: 1280px; margin: 0 auto; padding: 12px 16px 0; display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px 24px; }
+.brand { display: flex; align-items: center; gap: 10px; padding-bottom: 10px; }
+.brand img { flex: none; width: 52px; height: 52px; object-fit: contain; }
+.brand h1 { font-family: var(--script); font-weight: 400; font-size: 2.1rem; line-height: 1; color: var(--brand); letter-spacing: 0; }
+.brand .sub { font-size: .78rem; color: var(--muted); margin-top: 2px; }
+.brand .sub b { color: var(--brand); font-weight: 500; }
+nav.tabs { display: flex; gap: 2px; overflow-x: auto; margin-left: auto; }
+nav.tabs button { font: 600 .95rem var(--body); background: none; border: 0; color: var(--muted); padding: 10px 14px 11px; border-bottom: 3px solid transparent; cursor: pointer; white-space: nowrap; }
+nav.tabs button[aria-selected="true"] { color: var(--fg); border-bottom-color: var(--accent); }
+nav.tabs button.alert { color: var(--bad); }
+nav.tabs button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+/* Controles */
+button, .btn { font: 600 .9rem var(--body); border-radius: var(--r); border: 1px solid var(--line); background: var(--surface); color: var(--fg); padding: 8px 14px; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+button:hover, .btn:hover { border-color: var(--accent); }
+button:focus-visible, .btn:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+button.danger { background: var(--bad); color: #fff; border-color: var(--bad); }
+button.ghost { background: none; border-color: transparent; color: var(--accent); padding-inline: 6px; }
+button.small, .btn.small { padding: 4px 10px; font-size: .82rem; }
+button:disabled { opacity: .5; cursor: not-allowed; }
+label { display: grid; gap: 4px; font-size: .82rem; font-weight: 600; color: var(--muted); min-width: 0; }
+input, select, textarea { font: 400 .95rem var(--body); color: var(--fg); background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 8px 10px; width: 100%; min-width: 0; }
+textarea { min-height: 70px; resize: vertical; }
+.row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+.hint { font-size: .8rem; color: var(--muted); font-weight: 400; }
+
+/* Superficies */
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 16px; min-width: 0; }
+.stack { display: grid; gap: 16px; }
+section.view { padding-top: 20px; }
+
+/* Barra de resumen */
+.daybar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; margin-bottom: 16px; }
+.daybar .date input { width: auto; }
+.kpis { display: flex; flex-wrap: wrap; gap: 8px 22px; }
+.kpi { display: grid; }
+.kpi b { font: 600 1.6rem/1 var(--display); font-variant-numeric: tabular-nums; }
+.kpi span { font-size: .75rem; color: var(--muted); }
+.kpi.bad b { color: var(--bad); }
+.daybar .actions { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
+
+.board { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+.board-svc { grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); }
+@media (max-width: 900px) { .board, .board-svc { grid-template-columns: 1fr; } }
+
+/* Plano */
+.map-wrap { position: relative; }
+#map { width: 100%; height: auto; display: block; background: var(--sunk); border-radius: 6px; }
+#map text { font-family: var(--mono); }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 10px; font-size: .82rem; }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: -1px; }
+
+/* Rutas */
+.car { border: 1px solid var(--line); border-radius: 8px; background: var(--surface); overflow: hidden; }
+.car-h { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; padding: 10px 14px; border-bottom: 1px solid var(--line); }
+.car-h .dot { width: 12px; height: 12px; border-radius: 3px; flex: none; }
+.car-h h3 { font-size: 1.2rem; }
+.car-h .meta { font-size: .8rem; color: var(--muted); }
+.car-h .right { margin-left: auto; display: flex; gap: 6px; align-items: center; }
+.car.blocked .car-h { background: var(--bad-soft); }
+.car-total { margin-left: auto; display: grid; text-align: right; font: 600 1.05rem/1.1 var(--mono); font-variant-numeric: tabular-nums; }
+.car-total small { font: 600 .66rem var(--body); text-transform: uppercase; letter-spacing: .07em; color: var(--muted); }
+.car-total + .right { margin-left: 0; }
+.money-input { display: flex; align-items: center; border: 1px solid var(--line); border-radius: var(--r); background: var(--surface); }
+.money-input > span { padding-left: 10px; color: var(--muted); font: 500 .95rem var(--mono); }
+.money-input input { border: 0; padding-left: 4px; }
+.money-input:focus-within { outline: 2px solid var(--accent); outline-offset: 1px; }
+.money-input input:focus-visible { outline: none; }
+ol.stops { list-style: none; margin: 0; padding: 4px 0; }
+ol.stops li { display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; gap: 4px 10px; padding: 8px 14px; align-items: start; }
+ol.stops li + li { border-top: 1px dashed var(--line); }
+.seq { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font: 600 .78rem var(--mono); color: #fff; }
+.stop-main { min-width: 0; }
+.stop-main b { font-weight: 600; }
+.stop-main .addr { font-size: .84rem; color: var(--muted); overflow-wrap: anywhere; }
+.eta { text-align: right; font-family: var(--mono); font-size: .85rem; white-space: nowrap; }
+.eta small { display: block; color: var(--muted); font-size: .72rem; }
+.empty-car { padding: 14px; font-size: .88rem; color: var(--muted); }
+
+/* Chips de estado */
+.chip { display: inline-flex; align-items: center; gap: 4px; font: 600 .7rem var(--body); text-transform: uppercase; letter-spacing: .06em; padding: 2px 7px; border-radius: 999px; border: 1px solid transparent; white-space: nowrap; }
+.chip.pendiente { background: var(--info-soft); color: var(--accent); }
+.chip.en_curso { background: var(--warn-soft); color: var(--warn); }
+.chip.completado { background: var(--ok-soft); color: var(--ok); }
+.chip.reprogramar, .chip.cancelado { background: var(--bad-soft); color: var(--bad); }
+.chip.late { background: var(--bad-soft); color: var(--bad); }
+.chip.zone { background: var(--sunk); color: var(--muted); }
+.chip.approx { background: var(--warn-soft); color: var(--warn); }
+
+/* Siniestros */
+.inc { border-left: 4px solid var(--bad); padding: 10px 12px; background: var(--bad-soft); border-radius: 0 6px 6px 0; display: grid; gap: 4px; }
+.inc.resuelto { border-left-color: var(--line); background: var(--sunk); opacity: .8; }
+.inc .row { justify-content: space-between; }
+.report { border: 2px solid var(--bad); }
+.report h2 { color: var(--bad); }
+.impact { display: grid; gap: 8px; }
+.impact label { display: flex; gap: 10px; align-items: flex-start; font-weight: 500; color: var(--fg); font-size: .92rem; padding: 10px; border: 1px solid var(--line); border-radius: var(--r); cursor: pointer; background: var(--surface); }
+.impact input { width: auto; margin-top: 3px; }
+.impact label:has(input:checked) { border-color: var(--bad); background: var(--bad-soft); }
+
+/* Tablas */
+.tbl-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+th { text-align: left; font-size: .72rem; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); font-weight: 600; padding: 8px; border-bottom: 1px solid var(--line); }
+td { padding: 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+td .addr { color: var(--muted); font-size: .84rem; }
+tr[data-svc] { cursor: pointer; }
+tr[data-svc]:hover td { background: var(--sunk); }
+tr[data-svc].sel td { background: var(--info-soft); }
+tr[data-svc].sel td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
+td select { width: auto; max-width: 11rem; }
+.row-actions { display: flex; gap: 2px; margin-top: 4px; margin-left: -6px; }
+#svc-form.viewing input, #svc-form.viewing textarea { background: var(--sunk); border-color: transparent; }
+
+/* Avisos */
+.notice { padding: 10px 14px; border-radius: 6px; background: var(--info-soft); font-size: .9rem; }
+.notice.bad { background: var(--bad-soft); color: var(--fg); }
+.toasts { position: fixed; right: 16px; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); display: grid; gap: 8px; z-index: 50; max-width: min(420px, calc(100vw - 32px)); }
+.toast { background: var(--fg); color: var(--bg); padding: 12px 14px; border-radius: 8px; font-size: .9rem; display: flex; gap: 12px; align-items: center; box-shadow: 0 6px 24px rgba(0,0,0,.25); }
+.toast button { background: none; color: var(--bg); border-color: var(--bg); }
+.empty { padding: 28px; text-align: center; color: var(--muted); border: 1px dashed var(--line); border-radius: 8px; }
+.empty h3 { color: var(--fg); margin-bottom: 6px; }
+.field-car { display: flex; gap: 8px; flex-wrap: wrap; }
+.field-car button[aria-pressed="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+/* Monitoreo */
+.live { display: inline-flex; align-items: center; gap: 6px; font: 600 .78rem var(--body); color: var(--ok); text-transform: uppercase; letter-spacing: .08em; }
+.live::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--ok); }
+#mon-map { width: 100%; height: auto; display: block; background: var(--sunk); border-radius: 6px; }
+#mon-map text { font-family: var(--mono); }
+.mk { transition: transform 1.4s linear; }
+.unit { border: 1px solid var(--line); border-radius: 8px; background: var(--surface); padding: 12px 14px; display: grid; gap: 6px; }
+.unit-h { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+.unit-h h3 { font-size: 1.2rem; }
+.unit-h .right { margin-left: auto; font-family: var(--mono); font-size: .8rem; color: var(--muted); }
+.unit .big { font-size: .98rem; }
+.unit .big b { font-weight: 600; }
+.bar { height: 6px; border-radius: 3px; background: var(--sunk); overflow: hidden; }
+.bar i { display: block; height: 100%; border-radius: 3px; }
+.chip.camino { background: var(--info-soft); color: var(--accent); }
+.chip.llegando, .chip.servicio { background: var(--warn-soft); color: var(--warn); }
+.chip.terminado { background: var(--ok-soft); color: var(--ok); }
+.chip.base { background: var(--sunk); color: var(--muted); }
+.chip.fuera { background: var(--bad-soft); color: var(--bad); }
+ul.feed { list-style: none; margin: 0; padding: 0; display: grid; }
+ul.feed li { display: grid; grid-template-columns: 52px 12px minmax(0, 1fr); gap: 8px; padding: 7px 0; border-bottom: 1px solid var(--line); font-size: .88rem; align-items: baseline; }
+ul.feed li .t { font-family: var(--mono); color: var(--muted); font-size: .8rem; }
+ul.feed li .d { width: 9px; height: 9px; border-radius: 2px; }
+ul.feed li.bad { color: var(--bad); }
+@media (prefers-reduced-motion: reduce) { .mk { transition: none; } }
+@media (prefers-reduced-motion: no-preference) { .live::before { animation: pulse 1.6s ease-in-out infinite; } @keyframes pulse { 50% { opacity: .25; } } }
+@media (prefers-reduced-motion: no-preference) { .toast { animation: rise .2s ease-out; } @keyframes rise { from { transform: translateY(8px); opacity: .4; } } }
+</style>
+
+<header class="top">
+  <div class="top-in">
+    <div class="brand">
+      <img src="data:image/png;base64,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" width="52" height="52" alt="Logotipo de ZenSteam">
+      <div><h1>ZenSteam</h1><div class="sub"><b>La limpieza de tu hogar</b> · <span id="brand-sub">zonas de 5 km a la redonda</span></div></div>
+    </div>
+    <nav class="tabs" role="tablist">
+      <button role="tab" data-tab="tablero" aria-selected="true" id="tab-tablero">Tablero</button>
+      <button role="tab" data-tab="servicios" aria-selected="false" id="tab-servicios">Servicios</button>
+      <button role="tab" data-tab="campo" aria-selected="false" id="tab-campo">Personal en campo</button>
+      <button role="tab" data-tab="monitoreo" aria-selected="false" id="tab-monitoreo" hidden>Monitoreo</button>
+      <button role="tab" data-tab="flota" aria-selected="false" id="tab-flota">Autos y ajustes</button>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap">
+  <div id="sysnote" class="notice" style="margin-top:16px" hidden></div>
+
+  <!-- TABLERO -->
+  <section class="view" id="view-tablero">
+    <div class="daybar">
+      <label class="date">Día de servicio<input type="date" id="day"></label>
+      <div class="kpis" id="kpis"></div>
+      <div class="actions">
+        <button class="primary" id="btn-recalc">Asignar y recalcular rutas</button>
+      </div>
+    </div>
+    <div class="board">
+      <div class="stack">
+        <div class="panel">
+          <div class="row" style="justify-content:space-between;margin-bottom:10px">
+            <h2>Zonas del día</h2>
+            <span class="eyebrow">Plano en km · sin calles</span>
+          </div>
+          <div class="map-wrap"><svg id="map" viewBox="0 0 640 460" role="img" aria-label="Plano de zonas y servicios"></svg></div>
+          <div class="legend" id="legend"></div>
+        </div>
+        <div class="panel">
+          <div class="row" style="justify-content:space-between;margin-bottom:10px">
+            <h2>Siniestros y eventualidades</h2>
+            <button class="small" data-goto="campo">Reportar</button>
+          </div>
+          <div class="stack" id="inc-list" style="gap:8px"></div>
+        </div>
+      </div>
+      <div class="stack">
+        <div id="routes" class="stack" style="gap:12px"></div>
+        <div class="panel" id="pending-panel">
+          <h3 style="margin-bottom:8px">Sin asignar o por reprogramar</h3>
+          <div id="pending-list"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SERVICIOS -->
+  <section class="view" id="view-servicios" hidden>
+    <div class="board board-svc">
+      <div class="stack">
+      <form class="panel stack" id="svc-form" autocomplete="off">
+        <div class="row" style="justify-content:space-between">
+          <h2 id="svc-form-title">Servicio confirmado</h2>
+          <button type="button" class="ghost" id="svc-cancel-edit" hidden>Cancelar edición</button>
+        </div>
+        <input type="hidden" id="svc-id">
+        <div class="grid2">
+          <label>Cliente<input id="svc-cliente" required placeholder="Nombre o empresa"></label>
+          <label>Teléfono<input id="svc-tel" inputmode="tel" placeholder="55 1234 5678"></label>
+        </div>
+        <label>Dirección del servicio<textarea id="svc-dir" required placeholder="Calle, número, colonia, alcaldía o municipio, C.P."></textarea></label>
+        <label>Referencias<input id="svc-ref" placeholder="Entre calles, portón azul, piso 3…"></label>
+        <label>Descripción del servicio<textarea id="svc-desc" rows="2" placeholder="Ej. limpieza profunda de sala y 2 recámaras, lavado de alfombra…"></textarea></label>
+        <div class="grid2">
+          <label>Fecha<input type="date" id="svc-fecha" required></label>
+          <label>Hora preferida<input type="time" id="svc-hora"></label>
+          <label>Duración (min)<input type="number" id="svc-dur" min="15" step="15" class="num"></label>
+          <label>Monto ($)<input type="number" id="svc-monto" min="0" step="0.01" class="num" placeholder="0.00"></label>
+          <label>Forma de pago<input id="svc-pago" list="pago-opciones" placeholder="Efectivo, transferencia…"></label>
+        </div>
+        <datalist id="pago-opciones"><option value="Efectivo"><option value="Transferencia"><option value="Tarjeta de débito"><option value="Tarjeta de crédito"><option value="Depósito"><option value="Pendiente de pago"></datalist>
+        <label>Ubicación (latitud, longitud)
+          <input id="svc-coords" class="mono" placeholder="19.4326, -99.1332  o pega un enlace de Google Maps">
+          <span class="hint" id="coords-hint">Pega las coordenadas o el enlace que comparte el cliente. Si no lo tienes, usa «Ubicar dirección».</span>
+        </label>
+        <div class="row">
+          <button type="button" id="btn-geo">Ubicar dirección con Claude</button>
+          <a class="btn small" id="btn-verify" target="_blank" rel="noopener" hidden>Verificar en Google Maps ↗</a>
+        </div>
+        <label>Notas<input id="svc-notas" placeholder="Tipo de limpieza, mascotas, materiales…"></label>
+        <div class="row">
+          <button type="submit" class="primary" id="svc-save">Guardar y asignar</button>
+          <button type="button" class="primary" id="svc-edit-btn" hidden>Editar</button>
+          <span class="hint">Al guardar, el sistema asigna el servicio a un auto y recalcula las rutas del día.</span>
+        </div>
+      </form>
+      <div class="panel stack" id="imp-panel">
+        <div>
+          <h2>Cargar desde Excel</h2>
+          <p class="small muted" style="margin:4px 0 0">Una fila por servicio, con encabezados en la primera fila. Obligatorias: <b>Cliente</b> y <b>Dirección</b> (o Zona). Opcionales: Teléfono, Referencias, Fecha, Día, Hora, Duración (min), Monto, Descripción (o Servicio), Forma de pago, Ubicación, Notas.<br><b>Fecha</b>: dd/mm/aaaa, fecha de Excel o «17 de agosto»; si no trae año, se toma el que coincide con la columna Día. Si una fila no trae fecha, se usa el día elegido en la lista. <b>Si el servicio ya existe</b> (mismo cliente y fecha), se actualizan solo los datos que cambiaron; las celdas vacías no borran lo capturado.<br><b>Ubicación</b>: coordenadas «19.4326, -99.1332» o enlace largo de Google Maps que las incluya (se detecta la columna aunque tenga otro nombre). Si la fila no trae coordenadas (por ejemplo, un enlace corto maps.app.goo.gl), <b>Claude la calcula a partir de la dirección</b> al importar; queda marcada como ubicación aproximada para que la revises.</p>
+        </div>
+        <label>Archivo (.xlsx, .xls o .csv)<input type="file" id="imp-file" accept=".xlsx,.xls,.csv,.ods"></label>
+        <div id="imp-preview"></div>
+        <div class="row">
+          <button type="button" class="primary" id="imp-go" hidden>Importar</button>
+          <button type="button" class="ghost" id="imp-clear" hidden>Descartar</button>
+        </div>
+      </div>
+      </div>
+      <div class="panel">
+        <div class="row" style="justify-content:space-between;margin-bottom:10px">
+          <h2>Servicios del <span id="svc-day-label"></span></h2>
+          <div class="row">
+            <label class="date" style="flex-direction:row">Día<input type="date" id="svc-day"></label>
+            <button type="button" class="small" id="btn-export" hidden>Descargar todo en Excel</button>
+          </div>
+        </div>
+        <div class="tbl-wrap" id="svc-table"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CAMPO -->
+  <section class="view" id="view-campo" hidden>
+    <div class="stack">
+      <div class="panel">
+        <span class="eyebrow">¿En qué auto vas hoy?</span>
+        <div class="field-car" id="field-cars" style="margin-top:8px"></div>
+      </div>
+      <div class="board">
+        <div class="stack">
+          <div id="field-route"></div>
+        </div>
+        <form class="panel report stack" id="inc-form" autocomplete="off">
+          <div>
+            <h2>Reportar siniestro o eventualidad</h2>
+            <p class="small muted" style="margin:4px 0 0">El reporte llega al despacho y las rutas se recalculan al momento.</p>
+          </div>
+          <div class="grid2">
+            <label>Auto<select id="inc-car" required></select></label>
+            <label>Tipo
+              <select id="inc-tipo" required>
+                <option>Avería mecánica</option>
+                <option>Accidente vial</option>
+                <option>Persona lesionada</option>
+                <option>Daño en el domicilio del cliente</option>
+                <option>Cliente ausente o sin acceso</option>
+                <option>Tráfico o vía cerrada</option>
+                <option>Falta de material o equipo</option>
+                <option>Otro</option>
+              </select>
+            </label>
+          </div>
+          <fieldset style="border:0;padding:0;margin:0" class="impact">
+            <legend class="eyebrow" style="margin-bottom:6px">¿Qué pasa con la ruta?</legend>
+            <label><input type="radio" name="impacto" value="bloquea" checked><span><b>El auto no puede continuar.</b> Sus servicios pendientes pasan a los otros autos.</span></label>
+            <label><input type="radio" name="impacto" value="retraso"><span><b>Seguimos, con retraso.</b> Se recorren las horas de llegada.</span></label>
+            <label><input type="radio" name="impacto" value="servicio"><span><b>No se pudo hacer un servicio.</b> Se marca para reprogramar.</span></label>
+            <label><input type="radio" name="impacto" value="info"><span><b>Solo informar.</b> La ruta sigue igual.</span></label>
+          </fieldset>
+          <label id="inc-delay-wrap" hidden>Minutos de retraso<input type="number" id="inc-delay" min="5" step="5" value="30" class="num"></label>
+          <label id="inc-svc-wrap" hidden>Servicio afectado<select id="inc-svc"></select></label>
+          <label>¿Qué pasó?<textarea id="inc-desc" required placeholder="Describe brevemente lo ocurrido y si alguien necesita ayuda."></textarea></label>
+          <div class="grid2">
+            <label>Reporta<input id="inc-quien" placeholder="Tu nombre"></label>
+            <label>Ubicación (opcional)<input id="inc-coords" class="mono" placeholder="lat, lng o enlace de Maps"></label>
+          </div>
+          <button type="submit" class="danger" id="inc-send">Enviar reporte y recalcular</button>
+          <div id="inc-result"></div>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- MONITOREO (solo administradores) -->
+  <section class="view" id="view-monitoreo" hidden>
+    <div class="daybar">
+      <div><h2>Monitoreo en vivo</h2><div class="small muted">Solo administradores · hoy, <span id="mon-day"></span></div></div>
+      <span class="live" id="mon-live">En vivo</span>
+      <span class="small muted mono" id="mon-clock"></span>
+    </div>
+    <div class="board">
+      <div class="stack">
+        <div class="panel">
+          <div class="map-wrap"><svg id="mon-map" viewBox="0 0 640 520" role="img" aria-label="Posición estimada de los autos"><g id="mon-static"></g><g id="mon-cars"></g></svg></div>
+          <p class="small muted" style="margin:10px 0 0">Posición estimada con los avisos del personal (salida, llegada, servicio terminado) y la velocidad promedio. No es GPS: cada aviso corrige la posición.</p>
+        </div>
+      </div>
+      <div class="stack">
+        <div id="mon-units" class="stack" style="gap:10px"></div>
+        <div class="panel">
+          <h3 style="margin-bottom:6px">Actividad de hoy</h3>
+          <ul class="feed" id="mon-feed"></ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FLOTA -->
+  <section class="view" id="view-flota" hidden>
+    <div class="board">
+      <div class="stack" id="fleet"></div>
+      <form class="panel stack" id="cfg-form">
+        <h2>Reglas de asignación</h2>
+        <div class="grid2">
+          <label>Radio de zona (km)<input id="cfg-radio" class="num" type="number" value="5" min="1" max="15" step="0.5"><span class="hint">Máximo 15 km a la redonda.</span></label>
+          <label>Servicios por auto al día<input id="cfg-cap" class="num" type="number" min="1" max="20"></label>
+          <label>Inicio de jornada<input id="cfg-ini" type="time"></label>
+          <label>Fin de jornada<input id="cfg-fin" type="time"></label>
+          <label>Primer servicio desde<input id="cfg-p1ini" type="time"><span class="hint">Solo los servicios con hora fija en este horario pueden ser el primero del auto.</span></label>
+          <label>Primer servicio hasta<input id="cfg-p1fin" type="time"></label>
+          <label>Duración típica (min)<input id="cfg-dur" class="num" type="number" min="15" step="15"></label>
+          <label>Velocidad promedio (km/h)<input id="cfg-vel" class="num" type="number" min="5" max="80"></label>
+          <label>Monto de bonificación ($)
+            <span class="money-input"><span aria-hidden="true">$</span><input id="cfg-bono" class="num" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0.00"></span>
+            <span class="hint" id="cfg-bono-hint">Monto en pesos mexicanos (MXN).</span>
+          </label>
+        </div>
+        <label>Ciudad de referencia<input id="cfg-ciudad" placeholder="Ciudad de México"><span class="hint">Ayuda a ubicar direcciones incompletas.</span></label>
+        <div class="row"><button class="primary" type="submit">Guardar reglas</button></div>
+        <hr style="border:0;border-top:1px solid var(--line);width:100%">
+        <div class="stack" style="gap:8px">
+          <h3>Datos de ejemplo</h3>
+          <p class="small muted" style="margin:0">Los registros marcados como ejemplo se pueden quitar de una vez antes de empezar con clientes reales.</p>
+          <div class="row"><button type="button" id="btn-clear-demo">Quitar datos de ejemplo</button><span id="demo-count" class="small muted"></span></div>
+        </div>
+      </form>
+    </div>
+  </section>
+</div>
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+<script>
+(() => {
+"use strict";
+// ---------- Estado ----------
+const DEFAULTS = { radio: 5, cap: 6, ini: "08:00", fin: "18:00", dur: 120, vel: 12, ciudad: "Ciudad de México", p1ini: "08:30", p1fin: "11:00" };
+const S = { isAdmin: false, cars: [], services: [], incidents: [], cfg: { ...DEFAULTS }, db: null, canWrite: true, loaded: { cars: false, services: false, incidents: false }, day: today(), svcDay: today(), fieldCar: null, tab: "tablero", busy: false };
+const CAR_VARS = ["--car1", "--car2", "--car3", "--car4", "--car5", "--car6", "--car7", "--car8"];
+const STATUS_LABEL = { pendiente: "Pendiente", en_curso: "En curso", completado: "Completado", reprogramar: "Reprogramar", cancelado: "Cancelado" };
+const MAX_RADIO = 15; // radio máximo de una zona, en km
+const ROAD = 1.35; // factor calle vs. línea recta
+
+try { S.fieldCar = localStorage.getItem("fieldCar"); const t = localStorage.getItem("tab"); if (t) S.tab = S.wantTab = t; } catch (e) {}
+
+// ---------- Utilidades ----------
+function today() { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 10); }
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+function esc(s) { return String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
+function hav(a, b) { const R = 6371, r = Math.PI / 180; const dLa = (b.lat - a.lat) * r, dLo = (b.lng - a.lng) * r; const x = Math.sin(dLa / 2) ** 2 + Math.cos(a.lat * r) * Math.cos(b.lat * r) * Math.sin(dLo / 2) ** 2; return 2 * R * Math.asin(Math.sqrt(x)); }
+const hasLoc = p => p && Number.isFinite(p.lat) && Number.isFinite(p.lng);
+function nowMin(day) { if (day !== today()) return 0; const d = new Date(); return d.getHours() * 60 + d.getMinutes(); }
+function toMin(hhmm) { const [h, m] = String(hhmm || "08:00").split(":").map(Number); return h * 60 + (m || 0); }
+function fmtMin(m) { m = Math.round(m); const h = Math.floor(m / 60), mm = m % 60; return String(h).padStart(2, "0") + ":" + String(mm).padStart(2, "0"); }
+function fmtDay(iso) { try { return new Date(iso + "T12:00:00").toLocaleDateString("es-MX", { weekday: "long", day: "numeric", month: "long" }); } catch (e) { return iso; } }
+function carColor(car) { const i = S.cars.findIndex(c => c.id === car?.id); return i < 0 ? "var(--muted)" : `var(${CAR_VARS[i % CAR_VARS.length]})`; }
+function carById(id) { return S.cars.find(c => c.id === id); }
+const money = n => (+n || 0).toLocaleString("es-MX", { style: "currency", currency: "MXN" });
+const sumMonto = list => list.reduce((a, s) => a + (+s.monto || 0), 0);
+function parseCoords(t) {
+  t = String(t || "").trim(); if (!t) return null;
+  const pats = [/@(-?\d+\.\d+),\s*(-?\d+\.\d+)/, /!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/, /[?&](?:q|query|ll|sll|destination|daddr|center)=(-?\d+\.\d+)\s*(?:,|%2C)\s*\+?(-?\d+\.\d+)/i, /\/(?:search|place|dir)\/(-?\d+\.\d+)\s*(?:,|%2C)\s*\+?(-?\d+\.\d+)/i, /^\(?\s*(-?\d{1,2}(?:\.\d+)?)\s*[,;\s]\s*(-?\d{1,3}(?:\.\d+)?)\s*\)?$/];
+  for (const p of pats) { const m = t.match(p); if (m) { const lat = +m[1], lng = +m[2]; if (Math.abs(lat) <= 90 && Math.abs(lng) <= 180) return { lat, lng }; } }
+  return null;
+}
+// Enlace corto de Google Maps: no trae coordenadas y la página no puede abrirlo.
+const isShortLink = t => /(?:maps\.app\.goo\.gl|goo\.gl\/maps)\//i.test(String(t || ""));
+const fmtCoords = p => hasLoc(p) ? `${p.lat.toFixed(5)}, ${p.lng.toFixed(5)}` : "";
+const mapsLink = p => `https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lng}`;
+function routeLink(start, stops) { const pts = [start, ...stops].filter(hasLoc).map(p => `${p.lat},${p.lng}`); return pts.length ? "https://www.google.com/maps/dir/" + pts.join("/") : null; }
+
+function toast(msg, action) {
+  const el = document.createElement("div"); el.className = "toast"; const sp = document.createElement("span"); sp.textContent = msg; el.append(sp);
+  if (action) { const b = document.createElement("button"); b.className = "small"; b.textContent = action.label; b.onclick = () => { el.remove(); action.run(); }; el.append(b); }
+  $("#toasts").append(el); setTimeout(() => el.remove(), action ? 12000 : 5000);
+}
+function dbErr(e) {
+  const c = e?.code;
+  if (c === "invalid_argument" && !S.canWrite) return toast("Tu acceso es de solo lectura.");
+  if (c === "quota_exceeded") return toast("Se alcanzó el límite de registros. Elimina servicios antiguos para continuar.");
+  if (c === "resource_exhausted") return toast("Demasiados cambios seguidos. Espera unos segundos e intenta de nuevo.");
+  toast("No se pudo guardar el cambio. Revisa tu conexión e intenta de nuevo.");
+  console.error(e);
+}
+async function write(path, data, mode = "set") {
+  if (!S.db) { toast("La base de datos no está disponible en esta vista."); throw new Error("no-db"); }
+  try { await S.db.doc(path)[mode](data); }
+  catch (e) { if (e?.code === "unavailable") { await new Promise(r => setTimeout(r, 400 + Math.random() * 600)); return S.db.doc(path)[mode](data); } throw e; }
+}
+
+function upsertLocal(key, obj) { const i = S[key].findIndex(x => x.id === obj.id); if (i >= 0) S[key][i] = obj; else S[key].push(obj); }
+
+// ---------- Selectores de datos ----------
+const dayServices = day => S.services.filter(s => s.fecha === day);
+const openIncidents = (day, carId) => S.incidents.filter(i => i.status !== "resuelto" && i.fecha === day && (!carId || i.carId === carId));
+const isBlocked = (carId, day) => openIncidents(day, carId).some(i => i.impacto === "bloquea");
+const delayFor = (carId, day) => openIncidents(day, carId).filter(i => i.impacto === "retraso").reduce((a, i) => a + (+i.retrasoMin || 0), 0);
+
+// ---------- Motor de asignación ----------
+// 1) Agrupa servicios en zonas donde todos quedan a <= radio km del centro de la zona.
+function buildZones(list, R) {
+  let left = list.slice(); const zones = [];
+  while (left.length) {
+    let best = null, bestN = -1, bestSum = Infinity;
+    for (const s of left) {
+      let n = 0, sum = 0; for (const o of left) { const d = hav(s, o); if (d <= R) { n++; sum += d; } }
+      if (n > bestN || (n === bestN && sum < bestSum)) { best = s; bestN = n; bestSum = sum; }
+    }
+    let center = { lat: best.lat, lng: best.lng };
+    let members = left.filter(o => hav(center, o) <= R);
+    const c = { lat: members.reduce((a, o) => a + o.lat, 0) / members.length, lng: members.reduce((a, o) => a + o.lng, 0) / members.length };
+    const m2 = left.filter(o => hav(c, o) <= R);
+    if (m2.length >= members.length) { center = c; members = m2; }
+    zones.push({ center, members });
+    left = left.filter(o => !members.includes(o));
+  }
+  return zones;
+}
+// 2) Ordena paradas por vecino más cercano + mejora 2-opt.
+function orderRoute(start, stops) {
+  if (stops.length < 2) return stops.slice();
+  const rest = stops.slice(), out = []; let pos = start || rest[0];
+  while (rest.length) { let bi = 0, bd = Infinity; rest.forEach((s, i) => { const d = hav(pos, s); if (d < bd) { bd = d; bi = i; } }); pos = rest.splice(bi, 1)[0]; out.push(pos); }
+  const dist = r => r.reduce((a, s, i) => a + hav(i ? r[i - 1] : (start || r[0]), s), 0);
+  let improved = true, guard = 0;
+  while (improved && guard++ < 50) { improved = false;
+    for (let i = 0; i < out.length - 1; i++) for (let k = i + 1; k < out.length; k++) {
+      const cand = out.slice(0, i).concat(out.slice(i, k + 1).reverse(), out.slice(k + 1));
+      if (dist(cand) + 1e-9 < dist(out)) { out.splice(0, out.length, ...cand); improved = true; }
+    } }
+  return out;
+}
+function carStart(car, day) {
+  const done = dayServices(day).filter(s => s.carId === car.id && (s.status === "completado" || s.status === "en_curso")).sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  const last = done[done.length - 1];
+  if (last && hasLoc(last)) return { lat: last.lat, lng: last.lng };
+  return hasLoc(car.base) ? car.base : null;
+}
+// 3) Plan del día:
+//    - todos los autos salen de su base. El PRIMER servicio de cada auto (centro de su zona y primera parada) solo puede
+//      ser uno con hora fija dentro del horario de primer servicio (p1ini–p1fin, 08:30–11:00 por defecto) y se elige así:
+//        a) los autos que no alcanzan el monto de bonificación con lo cobrado en la semana eligen primero, del que
+//           menos lleva al que más, y reciben el servicio de mayor monto que alcancen a tiempo;
+//        b) los que ya alcanzaron la bonificación eligen después el servicio más cercano a su base, para reducir el
+//           kilometraje de su primer viaje respecto al día anterior (lo monetario siempre va primero);
+//    - los siguientes servicios van, uno por uno, al auto cuya zona los tiene más cerca dentro de su radio;
+//    - si ningún auto tiene un servicio dentro de su radio, se asigna sin tomar en cuenta el radio (al más cercano);
+//    - un auto recibe un servicio solo si cabe en su cupo, llega a cada hora fija (TOL min de tolerancia) contando el
+//      traslado desde su base o su servicio anterior, y termina dentro de la jornada; si ningún auto llega a tiempo,
+//      el servicio queda sin asignar.
+const TOL = 15;
+const centroid = list => ({ lat: list.reduce((a, o) => a + o.lat, 0) / list.length, lng: list.reduce((a, o) => a + o.lng, 0) / list.length });
+const carRadius = car => Math.min(MAX_RADIO, +car?.radio || +S.cfg.radio || 5);
+const addDays = (iso, n) => { const d = new Date(iso + "T12:00:00"); d.setDate(d.getDate() + n); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
+const weekMonday = iso => addDays(iso, -((new Date(iso + "T12:00:00").getDay() + 6) % 7));
+// Monto de la semana de un auto: sus servicios asignados (no cancelados ni por reprogramar) del lunes al día `to`.
+const weekAmount = (carId, day, to) => { const from = weekMonday(day); return S.services.filter(s => s.carId === carId && s.status !== "cancelado" && s.status !== "reprogramar" && s.fecha >= from && s.fecha <= to).reduce((a, s) => a + (+s.monto || 0), 0); };
+// Para la regla del primer servicio: lo acumulado en la semana ANTES de ese día (el día se está calculando).
+const weekCollected = (carId, day) => weekAmount(carId, day, addDays(day, -1));
+// Kilómetros del primer viaje (base → primera parada) del día anterior con ruta, hasta 7 días atrás.
+function prevFirstKm(car, day) {
+  if (!hasLoc(car.base)) return null;
+  for (let k = 1; k <= 7; k++) {
+    const d = addDays(day, -k);
+    const f = dayServices(d).filter(s => s.carId === car.id && hasLoc(s) && s.status !== "cancelado" && s.status !== "reprogramar").sort((a, b) => (a.order ?? 99) - (b.order ?? 99))[0];
+    if (f) return { day: d, km: hav(car.base, f) * ROAD };
+  }
+  return null;
+}
+const shuffle = list => { const a = list.slice(); for (let i = a.length - 1; i > 0; i--) { const k = Math.floor(Math.random() * (i + 1)); [a[i], a[k]] = [a[k], a[i]]; } return a; };
+function planDay(day, keep = false) {
+  const cfg = S.cfg, cap = +cfg.cap || 6, FIN = toMin(cfg.fin);
+  const svcs = dayServices(day);
+  const active = S.cars.filter(c => c.activo !== false && !isBlocked(c.id, day));
+  const plan = new Map(); // svcId -> {carId, zone, zoneLat, zoneLng, order, fueraRadio}
+  const cars = active.map(c => ({ car: c, R: carRadius(c), base: hasLoc(c.base) ? c.base : null, fixed: [], list: [], anchor: null, firstId: null, zn: S.cars.indexOf(c) + 1 }));
+  const byOrder = (a, b) => (a.order ?? 99) - (b.order ?? 99);
+  const anchorOf = s => Number.isFinite(s.zoneLat) && Number.isFinite(s.zoneLng) ? { lat: s.zoneLat, lng: s.zoneLng } : { lat: s.lat, lng: s.lng };
+  // Servicios ya hechos o en curso se quedan con su auto (si el auto sigue activo); su zona se conserva.
+  for (const s of svcs) { const x = cars.find(x => x.car.id === s.carId); if ((s.status === "completado" || s.status === "en_curso") && x) x.fixed.push(s); }
+  for (const x of cars) { const f = x.fixed.filter(hasLoc).sort(byOrder)[0]; if (f) x.anchor = anchorOf(f); }
+  // Asignados a mano: se quedan con su auto (si sigue activo) aunque no cumplan las reglas.
+  const manualNoLoc = [];
+  for (const x of cars) {
+    const man = svcs.filter(s => s.manual && s.carId === x.car.id && s.status === "pendiente");
+    man.filter(s => !hasLoc(s)).forEach(s => manualNoLoc.push({ x, s }));
+    if (!keep) { const ml = man.filter(hasLoc).sort(byOrder); x.list.push(...ml); if (!x.anchor && ml.length) x.anchor = anchorOf(ml[0]); }
+  }
+  // Modo "conservar": lo que ya tiene un auto disponible se queda con él.
+  if (keep) for (const x of cars) {
+    const kept = svcs.filter(s => s.carId === x.car.id && s.status === "pendiente" && hasLoc(s)).sort(byOrder);
+    x.list.push(...kept); if (!x.anchor && kept.length) x.anchor = anchorOf(kept[0]);
+    const f = kept.find(s => s.regla); if (f && !x.fixed.length) x.firstId = f.id; // conserva su primer servicio
+  }
+  const placed = new Set(cars.flatMap(x => x.list.map(s => s.id)));
+  let pool = svcs.filter(s => hasLoc(s) && !placed.has(s.id) && (s.status === "pendiente" || (s.status === "en_curso" && !cars.some(x => x.car.id === s.carId))));
+  const fallback = pool.length ? centroid(pool) : null;
+  const startOf = x => carStart(x.car, day) || x.base || fallback;
+  const t0Of = x => { const open = x.fixed.filter(s => s.status !== "completado"); return Math.max(toMin(cfg.ini) + delayFor(x.car.id, day), x.fixed.length > open.length ? nowMin(day) : 0); };
+  const run = (x, seq) => {
+    let t = t0Of(x), pos = startOf(x), maxLate = 0;
+    for (const s of seq) { if (pos) t += hav(pos, s) * ROAD / (+cfg.vel || 25) * 60; if (s.hora) { const h = toMin(s.hora); if (t < h) t = h; else maxLate = Math.max(maxLate, t - h); } t += +s.duracion || +cfg.dur || 120; pos = s; }
+    return { end: t, maxLate };
+  };
+  // Recorrido: lo que está en curso; el primer servicio elegido (si el auto aún no empieza); los de hora fija en orden
+  // de hora; los demás se insertan en el hueco que menos tiempo agrega sin llegar tarde a ninguna hora fija.
+  const sequence = x => {
+    const head = x.fixed.filter(s => s.status === "en_curso");
+    const first = !x.fixed.length && x.firstId ? x.list.find(s => s.id === x.firstId) : null;
+    const lead = first ? [...head, first] : head;
+    let order = x.list.filter(s => s.hora && s !== first).sort((a, b) => toMin(a.hora) - toMin(b.hora));
+    const score = o => { const r = run(x, [...lead, ...o]); return Math.max(0, r.maxLate - TOL) * 1000 + Math.max(0, r.end - FIN) * 100 + r.end; };
+    for (const s of orderRoute(first || x.anchor || startOf(x), x.list.filter(s => !s.hora && s !== first))) {
+      let bo = null, bc = Infinity;
+      for (let i = 0; i <= order.length; i++) { const c = order.slice(0, i).concat([s], order.slice(i)); const v = score(c); if (v < bc) { bc = v; bo = c; } }
+      order = bo;
+    }
+    return [...lead, ...order];
+  };
+  const fits = (x, s, strict = true) => {
+    if (x.fixed.length + x.list.length + 1 > cap) return false;
+    x.list.push(s); const r = run(x, sequence(x)); x.list.pop();
+    return r.end <= FIN && (!strict || r.maxLate <= TOL);
+  };
+  const give = (x, s, fuera) => { x.list.push(s); pool = pool.filter(o => o !== s); plan.set(s.id, { carId: x.car.id, zone: x.zn, zoneLat: x.anchor.lat, zoneLng: x.anchor.lng, fueraRadio: fuera || null, manual: null, regla: null }); };
+  // 1) Primer servicio de cada auto que aún no tiene ninguno (los que tienen servicios asignados a mano ya tienen zona):
+  //    solo servicios con hora fija dentro del horario de primer servicio y que el auto alcance a tiempo desde su base.
+  const bono = +cfg.bonificacion || 0;
+  const p1a = toMin(cfg.p1ini || DEFAULTS.p1ini), p1b = toMin(cfg.p1fin || DEFAULTS.p1fin);
+  const firstPool = () => pool.filter(s => s.hora && toMin(s.hora) >= p1a && toMin(s.hora) <= p1b);
+  const empty = cars.filter(x => !x.anchor).map(x => ({ x, week: weekCollected(x.car.id, day), prev: prevFirstKm(x.car, day) }));
+  //    a) Por monto: los que no llegan a la bonificación, del que menos lleva al que más, toman el servicio más caro.
+  const below = empty.filter(o => !bono || o.week < bono).sort((a, b) => a.week - b.week || (a.x.car.n ?? 99) - (b.x.car.n ?? 99));
+  //    b) Por kilometraje: los que ya llegaron toman el más cercano a su base (primero el que ayer recorrió más).
+  const above = empty.filter(o => bono && o.week >= bono).sort((a, b) => (b.prev?.km ?? 0) - (a.prev?.km ?? 0));
+  const startFirst = (x, s, regla) => { x.anchor = { lat: s.lat, lng: s.lng }; x.firstId = s.id; give(x, s, false); plan.get(s.id).regla = regla; };
+  for (const { x } of below) {
+    const from = startOf(x);
+    const s = firstPool().sort((a, b) => (+b.monto || 0) - (+a.monto || 0) || hav(from, a) - hav(from, b)).find(s => fits(x, s));
+    if (s) startFirst(x, s, "monto");
+  }
+  for (const { x } of above) {
+    const from = startOf(x);
+    const s = firstPool().sort((a, b) => hav(from, a) - hav(from, b) || (+b.monto || 0) - (+a.monto || 0)).find(s => fits(x, s));
+    if (s) startFirst(x, s, "km");
+  }
+  // 2) Los siguientes: el par (servicio, auto) más cercano dentro del radio de la zona del auto;
+  //    si ningún auto tiene ese servicio dentro de su radio, se toma el más cercano sin tomar en cuenta el radio.
+  while (pool.length) {
+    const pairs = [];
+    for (const s of pool) {
+      const opts = cars.filter(x => x.anchor).map(x => ({ s, x, d: hav(x.anchor, s) }));
+      const inR = opts.filter(o => o.d <= o.x.R);
+      (inR.length ? inR.map(o => ({ ...o, inR: true })) : opts.map(o => ({ ...o, inR: false }))).forEach(o => pairs.push(o));
+    }
+    pairs.sort((a, b) => (b.inR - a.inR) || (a.d - b.d));
+    let hit = null;
+    hit = pairs.find(p => fits(p.x, p.s));
+    if (!hit) { // ninguno cabe en los autos que lo tienen en su radio: se intenta con cualquier auto
+      const any = pool.flatMap(s => cars.filter(x => x.anchor).map(x => ({ s, x, d: hav(x.anchor, s), inR: false }))).sort((a, b) => a.d - b.d);
+      hit = any.find(p => fits(p.x, p.s));
+    }
+    if (!hit) break;
+    give(hit.x, hit.s, !hit.inR);
+  }
+  // Orden de visita
+  for (const x of cars) {
+    let n = 0;
+    x.fixed.filter(s => s.status === "completado").sort(byOrder)
+      .forEach(s => plan.set(s.id, { carId: x.car.id, zone: s.zone ?? null, zoneLat: s.zoneLat ?? null, zoneLng: s.zoneLng ?? null, fueraRadio: s.fueraRadio ?? null, manual: s.manual ?? null, regla: s.regla ?? null, order: ++n }));
+    for (const s of sequence(x)) { const p = plan.get(s.id) || { carId: x.car.id, zone: s.zone ?? null, zoneLat: s.zoneLat ?? null, zoneLng: s.zoneLng ?? null, fueraRadio: s.fueraRadio ?? null, manual: s.manual ?? null, regla: x.firstId === s.id ? (s.regla ?? null) : null }; p.order = ++n; plan.set(s.id, p); }
+    // Los asignados a mano sin ubicación van al final de su ruta.
+    manualNoLoc.filter(m => m.x === x).forEach(({ s }) => plan.set(s.id, { carId: x.car.id, zone: null, zoneLat: null, zoneLng: null, fueraRadio: null, manual: true, regla: null, order: ++n }));
+  }
+  const none = { carId: null, zone: null, zoneLat: null, zoneLng: null, fueraRadio: null, manual: null, regla: null, order: null };
+  pool.forEach(s => plan.set(s.id, { ...none }));
+  svcs.filter(s => s.status === "pendiente" && !hasLoc(s) && !manualNoLoc.some(m => m.s === s)).forEach(s => plan.set(s.id, { ...none }));
+  return plan;
+}
+async function recalc(day, { quiet = false, keep = false } = {}) {
+  if (S.busy) return null; S.busy = true; $("#btn-recalc").disabled = true;
+  try {
+    const before = new Map(dayServices(day).map(s => [s.id, s.carId || null]));
+    const plan = planDay(day, keep); let moved = 0, changed = 0; const movedFrom = {};
+    for (const s of dayServices(day)) {
+      const p = plan.get(s.id); if (!p) continue;
+      const diff = ["carId", "zone", "order", "zoneLat", "zoneLng", "fueraRadio", "manual", "regla"].some(k => (s[k] ?? null) !== (p[k] ?? null));
+      if (!diff) continue;
+      const body = { carId: p.carId, zone: p.zone, order: p.order, zoneLat: p.zoneLat, zoneLng: p.zoneLng, fueraRadio: p.fueraRadio ?? null, manual: p.manual ?? null, regla: p.regla ?? null };
+      if (s.status === "en_curso" && p.carId !== s.carId) body.status = "pendiente";
+      await write("services/" + s.id, body, "update"); Object.assign(s, body); changed++;
+      if (before.get(s.id) && before.get(s.id) !== p.carId) { moved++; movedFrom[before.get(s.id)] = (movedFrom[before.get(s.id)] || 0) + 1; }
+    }
+    const un = [...plan.values()].filter(p => !p.carId).length;
+    if (!quiet) toast(changed ? `Rutas actualizadas: ${changed} cambios${moved ? `, ${moved} servicios cambiaron de auto` : ""}${un ? `, ${un} sin asignar` : ""}.` : "Las rutas ya estaban al día.");
+    return { changed, moved, movedFrom, un, plan };
+  } catch (e) { dbErr(e); return null; }
+  finally { S.busy = false; $("#btn-recalc").disabled = !S.canWrite; }
+}
+
+// ---------- Línea de tiempo (horas estimadas) ----------
+function timeline(car, day) {
+  const stops = dayServices(day).filter(s => s.carId === car.id && s.status !== "cancelado" && s.status !== "reprogramar").sort((a, b) => (a.order ?? 99) - (b.order ?? 99));
+  let t = toMin(S.cfg.ini) + delayFor(car.id, day); let pos = hasLoc(car.base) ? car.base : stops.find(hasLoc); let km = 0;
+  const out = stops.map(s => {
+    const d = hasLoc(s) && pos ? hav(pos, s) * ROAD : 0; km += d; t += d / (+S.cfg.vel || 25) * 60;
+    const tarde = s.hora ? Math.max(0, Math.round(t - toMin(s.hora))) : 0;
+    let arrive = t; if (s.hora && toMin(s.hora) > arrive) { arrive = toMin(s.hora); }
+    const end = arrive + (+s.duracion || +S.cfg.dur || 120); t = end; if (hasLoc(s)) pos = s;
+    return { s, arrive, end, km: d, tarde, late: end > toMin(S.cfg.fin) };
+  });
+  return { stops: out, km, end: t };
+}
+
+// ---------- Render: Tablero ----------
+function renderKpis() {
+  const svcs = dayServices(S.day).filter(s => s.status !== "cancelado");
+  const asign = svcs.filter(s => s.carId && s.status !== "reprogramar").length;
+  const pend = svcs.filter(s => !s.carId || s.status === "reprogramar").length;
+  const inc = openIncidents(S.day).length;
+  const done = svcs.filter(s => s.status === "completado").length;
+  $("#kpis").innerHTML = `
+    <div class="kpi"><b>${svcs.length}</b><span>servicios</span></div>
+    <div class="kpi"><b>${asign}</b><span>asignados</span></div>
+    <div class="kpi"><b>${done}</b><span>completados</span></div>
+    <div class="kpi ${pend ? "bad" : ""}"><b>${pend}</b><span>sin asignar</span></div>
+    <div class="kpi ${inc ? "bad" : ""}"><b>${inc}</b><span>siniestros abiertos</span></div>
+    <div class="kpi"><b>${money(sumMonto(svcs.filter(s => s.carId && s.status !== "reprogramar")))}</b><span>monto asignado</span></div>`;
+  const tb = $("#tab-campo"); tb.classList.toggle("alert", openIncidents(today()).length > 0);
+}
+function renderMap() {
+  const svg = $("#map"); const W = 640, H = 460, PAD = 26;
+  const svcs = dayServices(S.day).filter(s => hasLoc(s) && s.status !== "cancelado");
+  const bases = S.cars.filter(c => hasLoc(c.base));
+  const R = Math.min(MAX_RADIO, +S.cfg.radio || 5);
+  const zones = new Map();
+  svcs.forEach(s => { if (s.carId && s.zone != null && Number.isFinite(s.zoneLat)) { const k = s.carId + ":" + s.zone; const zz = zones.get(k) || { lat: s.zoneLat, lng: s.zoneLng, carId: s.carId, zone: s.zone, first: Infinity }; if (s.hora) zz.first = Math.min(zz.first, toMin(s.hora)); zones.set(k, zz); } });
+  const pts = [...svcs, ...bases.map(c => c.base)];
+  if (!pts.length) { svg.innerHTML = `<text x="${W / 2}" y="${H / 2}" text-anchor="middle" fill="var(--muted)" font-size="14">Sin servicios con ubicación para este día</text>`; $("#legend").innerHTML = ""; return; }
+  const lat0 = pts.reduce((a, p) => a + p.lat, 0) / pts.length, lng0 = pts.reduce((a, p) => a + p.lng, 0) / pts.length;
+  const kx = 111.32 * Math.cos(lat0 * Math.PI / 180), ky = 110.574;
+  const P = p => ({ x: (p.lng - lng0) * kx, y: -(p.lat - lat0) * ky });
+  const all = [...pts.map(P), ...[...zones.values()].flatMap(z => { const c = P(z); return [{ x: c.x - R, y: c.y - R }, { x: c.x + R, y: c.y + R }]; })];
+  let minX = Math.min(...all.map(p => p.x)), maxX = Math.max(...all.map(p => p.x)), minY = Math.min(...all.map(p => p.y)), maxY = Math.max(...all.map(p => p.y));
+  const spanX = Math.max(maxX - minX, 4), spanY = Math.max(maxY - minY, 4);
+  const sc = Math.min((W - PAD * 2) / spanX, (H - PAD * 2) / spanY);
+  const cx = (minX + maxX) / 2, cy = (minY + maxY) / 2;
+  const X = p => W / 2 + (P(p).x - cx) * sc, Y = p => H / 2 + (P(p).y - cy) * sc;
+  const step = (W / sc) > 40 ? 5 : (W / sc) > 16 ? 2 : 1;
+  let g = "";
+  const x0 = Math.floor((cx - W / 2 / sc) / step) * step, y0 = Math.floor((cy - H / 2 / sc) / step) * step;
+  for (let k = x0; k <= cx + W / 2 / sc; k += step) { const px = W / 2 + (k - cx) * sc; g += `<line x1="${px}" y1="0" x2="${px}" y2="${H}" stroke="var(--line)" stroke-width="1" opacity=".6"/>`; }
+  for (let k = y0; k <= cy + H / 2 / sc; k += step) { const py = H / 2 + (k - cy) * sc; g += `<line x1="0" y1="${py}" x2="${W}" y2="${py}" stroke="var(--line)" stroke-width="1" opacity=".6"/>`; }
+  let z = "";
+  zones.forEach(zn => { const car = carById(zn.carId); const col = carColor(car); z += `<circle cx="${X(zn)}" cy="${Y(zn)}" r="${carRadius(car) * sc}" fill="${col}" fill-opacity=".08" stroke="${col}" stroke-width="1.5" stroke-dasharray="5 4"/><text x="${X(zn)}" y="${Y(zn) - carRadius(car) * sc + 14}" text-anchor="middle" font-size="11" fill="${col}">Z${zn.zone}${Number.isFinite(zn.first) ? " · " + fmtMin(zn.first) : ""}</text>`; });
+  let lines = "";
+  S.cars.forEach(car => {
+    const tl = timeline(car, S.day).stops.filter(o => hasLoc(o.s)); if (!tl.length) return;
+    const start = hasLoc(car.base) ? car.base : tl[0].s;
+    const d = [start, ...tl.map(o => o.s)].map((p, i) => `${i ? "L" : "M"}${X(p).toFixed(1)},${Y(p).toFixed(1)}`).join(" ");
+    lines += `<path d="${d}" fill="none" stroke="${carColor(car)}" stroke-width="2" stroke-opacity=".75" ${isBlocked(car.id, S.day) ? 'stroke-dasharray="2 4"' : ""}/>`;
+  });
+  let dots = "";
+  bases.forEach(c => { dots += `<rect x="${X(c.base) - 7}" y="${Y(c.base) - 7}" width="14" height="14" rx="2" fill="var(--surface)" stroke="${carColor(c)}" stroke-width="2.5"><title>${esc(c.nombre)} · base</title></rect>`; });
+  svcs.forEach(s => {
+    const car = carById(s.carId); const x = X(s), y = Y(s);
+    if (!car || s.status === "reprogramar") { dots += `<circle cx="${x}" cy="${y}" r="7" fill="var(--surface)" stroke="var(--muted)" stroke-width="2"><title>${esc(s.cliente)} · sin asignar</title></circle>`; return; }
+    const col = carColor(car), done = s.status === "completado";
+    dots += `<g><circle cx="${x}" cy="${y}" r="10" fill="${done ? "var(--surface)" : col}" stroke="${col}" stroke-width="2"/><text x="${x}" y="${y + 3.6}" text-anchor="middle" font-size="10.5" font-weight="600" fill="${done ? col : "#fff"}">${s.order ?? ""}</text><title>${esc(s.cliente)} · ${esc(car.nombre)} #${s.order ?? ""}</title></g>`;
+  });
+  const bar = 5 * sc; const sb = `<g transform="translate(${W - PAD - bar},${H - 16})"><line x1="0" y1="0" x2="${bar}" y2="0" stroke="var(--fg)" stroke-width="2"/><line x1="0" y1="-4" x2="0" y2="4" stroke="var(--fg)" stroke-width="2"/><line x1="${bar}" y1="-4" x2="${bar}" y2="4" stroke="var(--fg)" stroke-width="2"/><text x="${bar / 2}" y="-7" text-anchor="middle" font-size="11" fill="var(--fg)">5 km</text></g><text x="12" y="${H - 10}" font-size="10.5" fill="var(--muted)">cuadrícula ${step} km · N ↑</text>`;
+  svg.innerHTML = g + z + lines + dots + sb;
+  $("#legend").innerHTML = S.cars.map(c => `<span><i style="background:${carColor(c)}"></i>${esc(c.nombre)}${isBlocked(c.id, S.day) ? " · fuera de servicio" : ""}</span>`).join("") + `<span><i style="background:var(--surface);border:2px solid var(--muted)"></i>Sin asignar</span><span class="muted">□ base · círculo punteado = zona de ${R} km</span>`;
+}
+function stopRow(o, car, opts = {}) {
+  const s = o.s; const col = carColor(car);
+  const chips = [s.status !== "pendiente" ? `<span class="chip ${s.status}">${STATUS_LABEL[s.status]}</span>` : "", s.zone ? `<span class="chip zone">Z${s.zone}</span>` : "", s.hora ? `<span class="chip zone">Hora ${esc(s.hora)}</span>` : "", s.fueraRadio ? `<span class="chip approx">Fuera de radio</span>` : "", s.manual ? `<span class="chip zone">Manual</span>` : "", s.regla === "monto" ? `<span class="chip en_curso" title="Primer servicio: el de mayor monto, porque el auto no ha alcanzado la bonificación de la semana">1.º por monto</span>` : s.regla === "km" ? `<span class="chip completado" title="Primer servicio: el más cercano a la base, porque el auto ya alcanzó la bonificación">1.º por cercanía</span>` : "", o.tarde > TOL ? `<span class="chip late">Llega ${o.tarde} min tarde</span>` : "", o.late ? `<span class="chip late">Fuera de horario</span>` : "", s.coordFuente === "claude" ? `<span class="chip approx">Ubicación aprox.</span>` : ""].join(" ");
+  const actions = opts.field ? `<div class="row" style="margin-top:6px">${s.status === "pendiente" ? `<button class="small" data-act="start" data-id="${s.id}">Llegamos · iniciar</button>` : ""}${s.status === "en_curso" ? `<button class="small primary" data-act="done" data-id="${s.id}">Servicio terminado</button>` : ""}${hasLoc(s) ? `<a class="btn small" href="${mapsLink(s)}" target="_blank" rel="noopener">Cómo llegar ↗</a>` : ""}</div>` : "";
+  const tel = opts.field && s.telefono ? `<div class="small mono" style="user-select:all">${esc(s.telefono)}</div>` : "";
+  return `<li><span class="seq" style="background:${s.status === "completado" ? "var(--muted)" : col}">${s.order ?? "·"}</span>
+    <div class="stop-main"><b>${esc(s.cliente)}</b> ${chips}<div class="addr">${esc(s.direccion)}${s.referencias ? " · " + esc(s.referencias) : ""}</div>${s.descripcion ? `<div class="small">${esc(s.descripcion)}</div>` : ""}${s.notas && opts.field ? `<div class="small muted">${esc(s.notas)}</div>` : ""}${tel}${opts.field && (+s.monto || s.formaPago) ? `<div class="small"><b>${+s.monto ? `Cobrar ${money(s.monto)}` : "Pago"}</b>${s.formaPago ? ` · ${esc(s.formaPago)}` : ""}</div>` : ""}${actions}</div>
+    <div class="eta">${fmtMin(o.arrive)}<small>${o.km ? o.km.toFixed(1) + " km" : "—"}</small></div></li>`;
+}
+function carCard(car, day, opts = {}) {
+  const tl = timeline(car, day); const blocked = isBlocked(car.id, day); const delay = delayFor(car.id, day);
+  const link = routeLink(hasLoc(car.base) ? car.base : null, tl.stops.filter(o => o.s.status !== "completado").map(o => o.s));
+  const status = car.activo === false ? `<span class="chip cancelado">Inactivo</span>` : blocked ? `<span class="chip cancelado">Fuera de servicio</span>` : delay ? `<span class="chip en_curso">+${delay} min</span>` : "";
+  return `<div class="car ${blocked ? "blocked" : ""}">
+    <div class="car-h"><span class="dot" style="background:${carColor(car)}"></span><h3>${esc(car.nombre)}</h3>${status}${(() => { const w = weekAmount(car.id, day, day), b = +S.cfg.bonificacion || 0; return `<span class="chip ${b && w >= b ? "completado" : "zone"}" title="Acumulado de la semana: servicios del auto del lunes a este día${b ? ", contra el monto de bonificación" : ""}">Semana ${money(w)}${b ? ` / ${money(b)}` : ""}</span>`; })()}
+      <span class="meta">${tl.stops.length} servicios · ${tl.km.toFixed(1)} km · termina ${tl.stops.length ? fmtMin(tl.end) : "—"}</span>
+      <span class="car-total" title="Total de los servicios del auto este día"><small>Total</small>${money(sumMonto(tl.stops.map(o => o.s)))}</span>
+      <span class="right">${link && tl.stops.length ? `<a class="btn small" href="${link}" target="_blank" rel="noopener">Ruta en Maps ↗</a>` : ""}</span></div>
+    ${tl.stops.length ? `<ol class="stops">${tl.stops.map(o => stopRow(o, car, opts)).join("")}</ol>` : `<div class="empty-car">${blocked ? "Sin servicios: el auto quedó fuera de servicio y su ruta se repartió." : "Sin servicios asignados este día."}</div>`}
+  </div>`;
+}
+function renderRoutes() {
+  if (!S.cars.length) { $("#routes").innerHTML = `<div class="empty"><h3>Aún no hay autos registrados</h3><p>Da de alta tus autos para empezar a asignar servicios.</p><button class="primary" id="btn-make-cars">Crear Auto 1, 2 y 3</button></div>`; return; }
+  $("#routes").innerHTML = S.cars.map(c => carCard(c, S.day)).join("");
+}
+function renderPending() {
+  const list = dayServices(S.day).filter(s => s.status !== "cancelado" && s.status !== "completado" && (!s.carId || s.status === "reprogramar"));
+  if (!list.length) { $("#pending-list").innerHTML = `<p class="small muted" style="margin:0">Todo asignado para este día.</p>`; return; }
+  $("#pending-list").innerHTML = `<ul style="list-style:none;padding:0;margin:0;display:grid;gap:8px">${list.map(s => `<li><b>${esc(s.cliente)}</b> <span class="chip ${s.status}">${STATUS_LABEL[s.status]}</span>${!hasLoc(s) ? ' <span class="chip late">Falta ubicación</span>' : ""}<div class="small muted">${esc(s.direccion)}</div>
+    <div class="small">${s.status === "reprogramar" ? "No se pudo realizar. Cambia la fecha en Servicios." : !hasLoc(s) ? "Agrega coordenadas para poder asignarlo." : s.hora ? `Ningún auto alcanza a llegar a las ${esc(s.hora)} contando el traslado, o no tiene tiempo libre a esa hora. Cambia la hora o la fecha.` : "No cabe en la jornada ni en el cupo de los autos disponibles. Cambia la fecha o ajusta las reglas."}</div></li>`).join("")}</ul>`;
+}
+function renderIncidents() {
+  const list = S.incidents.filter(i => i.fecha === S.day || i.status !== "resuelto").sort((a, b) => (b.creado || "").localeCompare(a.creado || ""));
+  if (!list.length) { $("#inc-list").innerHTML = `<p class="small muted" style="margin:0">Sin reportes. El personal reporta desde «Personal en campo».</p>`; return; }
+  const IMP = { bloquea: "Auto fuera de servicio", retraso: "Retraso", servicio: "Servicio sin realizar", info: "Informativo" };
+  $("#inc-list").innerHTML = list.map(i => { const car = carById(i.carId); const loc = parseCoords(i.ubicacion);
+    return `<div class="inc ${i.status === "resuelto" ? "resuelto" : ""}">
+      <div class="row"><b>${esc(i.tipo)} · ${esc(car?.nombre || "Auto")}</b><span class="small mono">${esc(i.fecha)} ${i.creado ? new Date(i.creado).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" }) : ""}</span></div>
+      <div class="small"><span class="chip ${i.impacto === "bloquea" ? "cancelado" : i.impacto === "retraso" ? "en_curso" : "zone"}">${IMP[i.impacto] || ""}${i.impacto === "retraso" ? " +" + i.retrasoMin + " min" : ""}</span> ${esc(i.descripcion)}</div>
+      <div class="row small muted"><span>${i.reporta ? "Reporta: " + esc(i.reporta) : ""} ${loc ? `· <a href="${mapsLink(loc)}" target="_blank" rel="noopener">ver ubicación ↗</a>` : ""}</span>
+      ${i.status !== "resuelto" ? `<button class="small" data-act="resolve" data-id="${i.id}">Marcar resuelto</button>` : `<span>Resuelto</span>`}</div></div>`; }).join("");
+}
+
+// ---------- Render: Servicios ----------
+function renderSvcTable() {
+  $("#svc-day-label").textContent = fmtDay(S.svcDay);
+  const list = dayServices(S.svcDay).sort((a, b) => (a.carId || "zz").localeCompare(b.carId || "zz") || (a.order ?? 99) - (b.order ?? 99));
+  if (!list.length) { $("#svc-table").innerHTML = `<div class="empty"><h3>Sin servicios este día</h3><p>Registra el primero con el formulario: cliente, dirección y ubicación.</p></div>`; return; }
+  $("#svc-table").innerHTML = `<table><thead><tr><th>Cliente</th><th>Auto</th><th>Estado</th></tr></thead><tbody>${list.map(s => { const car = carById(s.carId);
+    return `<tr data-svc="${s.id}" class="${S.selSvc === s.id ? "sel" : ""}" title="Ver los datos del servicio"><td><b>${esc(s.cliente)}</b>${s.ejemplo ? ' <span class="chip zone">Ejemplo</span>' : ""}${s.hora ? ` <span class="chip zone">${esc(s.hora)}</span>` : ""}<div class="addr">${esc(s.direccion)}</div>${hasLoc(s) ? `<div class="small mono muted">${fmtCoords(s)}${s.coordFuente === "claude" ? " · aprox." : ""}</div>` : '<span class="chip late">Falta ubicación</span>'}${s.monto != null && s.monto !== "" ? `<div class="small mono"><b>${money(s.monto)}</b></div>` : ""}
+      <div class="row-actions"><button class="small ghost" data-act="edit" data-id="${s.id}">Editar</button><button class="small ghost" data-act="del" data-id="${s.id}">Eliminar</button></div></td>
+      <td style="white-space:nowrap">${(!car || s.manual) && (s.status === "pendiente" || s.status === "reprogramar")
+        ? `${car ? `<span class="seq" style="display:inline-grid;background:${carColor(car)}">${s.order ?? ""}</span> ` : ""}<select data-act="assign" data-id="${s.id}" aria-label="Asignar auto" style="width:auto"><option value="">${car ? "Quitar asignación" : "Sin asignar · elegir auto"}</option>${S.cars.filter(c => c.activo !== false).map(c => `<option value="${c.id}" ${c.id === s.carId ? "selected" : ""}>${esc(c.nombre)}${isBlocked(c.id, s.fecha) ? " (fuera de servicio)" : ""}</option>`).join("")}</select>${s.manual ? ' <span class="chip zone">Manual</span>' : ""}`
+        : `${car ? `<span class="seq" style="display:inline-grid;background:${carColor(car)}">${s.order ?? ""}</span> ${esc(car.nombre)}` : '<span class="muted">—</span>'}${s.zone ? ` <span class="chip zone">Z${s.zone}</span>` : ""}`}</td>
+      <td><select data-act="status" data-id="${s.id}" aria-label="Estado">${Object.entries(STATUS_LABEL).map(([k, v]) => `<option value="${k}" ${k === s.status ? "selected" : ""}>${v}</option>`).join("")}</select></td></tr>`; }).join("")}</tbody></table>`;
+}
+
+// ---------- Render: Campo ----------
+function renderField() {
+  const t = today();
+  $("#field-cars").innerHTML = S.cars.map(c => `<button data-act="pick" data-id="${c.id}" aria-pressed="${S.fieldCar === c.id}"><span class="dot" style="display:inline-block;width:10px;height:10px;border-radius:3px;background:${carColor(c)}"></span>${esc(c.nombre)}${c.tripulacion ? ` <span class="small" style="font-weight:400">· ${esc(c.tripulacion)}</span>` : ""}</button>`).join("") || `<span class="muted">Primero registra los autos en «Autos y ajustes».</span>`;
+  const car = carById(S.fieldCar);
+  const mineToday = car ? dayServices(t).filter(s => s.carId === car.id && s.status !== "cancelado" && s.status !== "reprogramar") : [];
+  const started = mineToday.some(s => s.status === "en_curso" || s.status === "completado");
+  const canDepart = car && mineToday.some(s => s.status === "pendiente") && !started && car.salida?.fecha !== t;
+  const departed = car && car.salida?.fecha === t && !started;
+  $("#field-route").innerHTML = car ? `<h2 style="margin-bottom:8px">Ruta de hoy · <span class="muted" style="font-weight:500">${esc(fmtDay(t))}</span></h2>${canDepart ? `<div class="notice row" style="margin-bottom:10px;justify-content:space-between"><span>Avisa cuando salgan para que el despacho siga el recorrido.</span><button class="primary small" data-act="depart" data-id="${car.id}">Salimos de la base</button></div>` : ""}${departed ? `<div class="notice" style="margin-bottom:10px">Salida registrada a las ${new Date(car.salida.at).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit", hour12: false })}.</div>` : ""}${carCard(car, t, { field: true })}` : `<div class="empty"><h3>Elige tu auto</h3><p>Verás tus servicios de hoy en orden, con la hora estimada de llegada.</p></div>`;
+  const sel = $("#inc-car"), v = sel.value || S.fieldCar || "";
+  sel.innerHTML = S.cars.map(c => `<option value="${c.id}">${esc(c.nombre)}</option>`).join(""); if (v) sel.value = v;
+  fillIncSvc();
+}
+function fillIncSvc() {
+  const sel = $("#inc-svc"), v = sel.value;
+  const list = dayServices(today()).filter(s => s.carId === $("#inc-car").value && (s.status === "pendiente" || s.status === "en_curso")).sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  sel.innerHTML = list.map(s => `<option value="${s.id}">#${s.order ?? ""} ${esc(s.cliente)}</option>`).join("") || `<option value="">Sin servicios pendientes</option>`;
+  if (v) sel.value = v;
+}
+
+// ---------- Render: Flota ----------
+function renderFleet() {
+  if (!S.cars.length) { $("#fleet").innerHTML = `<div class="empty"><h3>Sin autos</h3><p>Empieza con 3 autos; después puedes agregar más.</p><button class="primary" id="btn-make-cars">Crear Auto 1, 2 y 3</button></div>`; return; }
+  const active = document.activeElement?.closest?.("#fleet form");
+  if (active) return; // no interrumpir una edición en curso
+  const addBar = `<div class="panel row" style="justify-content:space-between"><div><h2>Autos</h2><div class="small muted">${S.cars.length} registrado${S.cars.length === 1 ? "" : "s"} · ${S.cars.filter(c => c.activo !== false).length} disponible${S.cars.filter(c => c.activo !== false).length === 1 ? "" : "s"}</div></div><button class="primary" type="button" id="btn-add-car" ${S.canWrite ? "" : "disabled"}>+ Agregar auto</button></div>`;
+  $("#fleet").innerHTML = addBar + S.cars.map(c => `<form class="panel stack" data-car="${c.id}" autocomplete="off">
+    <div class="row"><span class="dot" style="width:14px;height:14px;border-radius:3px;background:${carColor(c)}"></span><h2 style="flex:1">${esc(c.nombre)}</h2>
+      <label style="display:flex;flex-direction:row;gap:6px;align-items:center;color:var(--fg)"><input type="checkbox" id="act-${c.id}" name="activo" style="width:auto" ${c.activo !== false ? "checked" : ""}> Disponible</label></div>
+    <div class="grid2">
+      <label>Nombre<input id="nom-${c.id}" name="nombre" value="${esc(c.nombre)}"></label>
+      <label>Placas<input id="pla-${c.id}" name="placas" value="${esc(c.placas)}" class="mono"></label>
+      <label>Tripulación<input id="tri-${c.id}" name="tripulacion" value="${esc(c.tripulacion)}" placeholder="Nombres del equipo"></label>
+      <label>Base de salida<input id="bas-${c.id}" name="base" value="${esc(fmtCoords(c.base))}" class="mono" placeholder="lat, lng"></label>
+      <label>Radio de zona (km)<input id="rad-${c.id}" name="radio" type="number" min="1" max="15" step="0.5" class="num" value="${esc(c.radio ?? "")}" placeholder="${Math.min(MAX_RADIO, +S.cfg.radio || 5)} (general)"></label>
+    </div>
+    <div class="row"><button class="small" type="submit">Guardar ${esc(c.nombre)}</button>${hasLoc(c.base) ? `<a class="btn small" href="${mapsLink(c.base)}" target="_blank" rel="noopener">Ver base ↗</a>` : ""}<button class="small ghost" type="button" data-act="del-car" data-id="${c.id}" style="margin-left:auto">Quitar auto</button></div>
+  </form>`).join("");
+}
+function renderCfg() {
+  const c = S.cfg; const f = { "#cfg-radio": c.radio, "#cfg-cap": c.cap, "#cfg-ini": c.ini, "#cfg-fin": c.fin, "#cfg-dur": c.dur, "#cfg-vel": c.vel, "#cfg-ciudad": c.ciudad, "#cfg-bono": c.bonificacion, "#cfg-p1ini": c.p1ini, "#cfg-p1fin": c.p1fin };
+  if ($("#cfg-form").contains(document.activeElement)) return;
+  for (const k in f) $(k).value = f[k] ?? "";
+  bonoHint();
+  if (!$("#svc-dur").value) $("#svc-dur").placeholder = c.dur;
+  const n = S.services.filter(s => s.ejemplo).length + S.incidents.filter(i => i.ejemplo).length;
+  $("#demo-count").textContent = n ? `${n} registros de ejemplo` : "No hay registros de ejemplo.";
+  $("#btn-clear-demo").disabled = !n || !S.canWrite;
+}
+
+// ---------- Monitoreo en vivo (posición estimada) ----------
+const MON = { sig: "", P: null };
+const dayMs = (day, min) => new Date(day + "T00:00:00").getTime() + min * 60000;
+const tsMs = iso => { const t = Date.parse(iso || ""); return Number.isFinite(t) ? t : null; };
+const lerp = (a, b, f) => ({ lat: a.lat + (b.lat - a.lat) * f, lng: a.lng + (b.lng - a.lng) * f });
+const travelMs = (a, b) => (a && b ? hav(a, b) * ROAD / (+S.cfg.vel || 25) * 3600000 : 0);
+const hhmm = ms => new Date(ms).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit", hour12: false });
+const inMin = ms => Math.max(0, Math.round(ms / 60000));
+function bearing(a, b) { if (!a || !b) return 0; const dx = (b.lng - a.lng) * Math.cos(a.lat * Math.PI / 180), dy = b.lat - a.lat; return Math.atan2(dx, dy) * 180 / Math.PI; }
+function liveState(car, now) {
+  const day = today(); const tl = timeline(car, day).stops.filter(o => hasLoc(o.s)); const stops = tl.map(o => o.s);
+  const base = hasLoc(car.base) ? car.base : stops[0] || null;
+  const done = stops.filter(s => s.status === "completado");
+  const st = { car, total: stops.length, done: done.length, pos: base, heading: 0, base, stops };
+  const lastDone = done[done.length - 1];
+  if (isBlocked(car.id, day)) {
+    const inc = openIncidents(day, car.id).find(i => i.impacto === "bloquea");
+    return Object.assign(st, { estado: "fuera", label: "Fuera de servicio", pos: parseCoords(inc?.ubicacion) || lastDone || base, since: tsMs(inc?.creado), text: `${esc(inc?.tipo || "Siniestro")}${inc?.descripcion ? " · " + esc(inc.descripcion) : ""}` });
+  }
+  if (!stops.length) return Object.assign(st, { estado: "base", label: "En base", text: "Sin servicios asignados hoy." });
+  const cur = stops.find(s => s.status === "en_curso");
+  if (cur) {
+    const since = tsMs(cur.inicio) ?? now; const dur = (+cur.duracion || +S.cfg.dur || 120) * 60000;
+    return Object.assign(st, { estado: "servicio", label: "En servicio", pos: cur, since, progress: Math.min(1, (now - since) / dur),
+      text: `Con <b>${esc(cur.cliente)}</b> desde ${hhmm(since)} · termina ~${hhmm(since + dur)}` });
+  }
+  const next = stops.find(s => s.status === "pendiente");
+  if (!next) return Object.assign(st, { estado: "terminado", label: "Ruta terminada", pos: lastDone || base, text: lastDone?.fin ? `Último servicio terminado a las ${hhmm(tsMs(lastDone.fin))}.` : "Todos los servicios del día están terminados." });
+  const from = lastDone || base;
+  const salida = car.salida?.fecha === day ? tsMs(car.salida.at) : null;
+  let fromTime;
+  if (lastDone) fromTime = tsMs(lastDone.fin) ?? dayMs(day, tl.find(o => o.s === lastDone)?.end ?? toMin(S.cfg.ini));
+  else fromTime = salida ?? dayMs(day, toMin(S.cfg.ini) + delayFor(car.id, day));
+  st.heading = bearing(from, next); st.next = next;
+  if (!lastDone && !salida && now < fromTime) return Object.assign(st, { estado: "base", label: "En base", pos: base, text: `Sale hacia <b>${esc(next.cliente)}</b> a las ${hhmm(fromTime)}.` });
+  const tMs = travelMs(from, next); const eta = fromTime + tMs; const f = tMs ? (now - fromTime) / tMs : 1;
+  const d = next.direccion ? `<div class="small muted">${esc(next.direccion)}</div>` : "";
+  if (f < 1) return Object.assign(st, { estado: "camino", label: "En camino", pos: lerp(from, next, Math.max(0, f)), progress: Math.max(0, f), eta,
+    text: `Hacia <b>${esc(next.cliente)}</b> · llega ${hhmm(eta)} <span class="muted">(en ${inMin(eta - now)} min)</span>${d}` });
+  const late = inMin(now - eta);
+  return Object.assign(st, { estado: "llegando", label: late > 10 ? `Retraso ${late} min` : "Por llegar", pos: lerp(from, next, .96), progress: .96, eta,
+    text: `Llegando con <b>${esc(next.cliente)}</b> · se esperaba a las ${hhmm(eta)}${d}` });
+}
+function monFeed(day) {
+  const ev = [];
+  S.cars.forEach(c => { if (c.salida?.fecha === day) ev.push({ t: tsMs(c.salida.at), car: c, txt: "Salió de la base" }); });
+  dayServices(day).forEach(s => { const c = carById(s.carId); if (s.inicio) ev.push({ t: tsMs(s.inicio), car: c, txt: `Llegó con ${s.cliente}` }); if (s.fin) ev.push({ t: tsMs(s.fin), car: c, txt: `Terminó con ${s.cliente}` }); });
+  S.incidents.filter(i => i.fecha === day).forEach(i => ev.push({ t: tsMs(i.creado), car: carById(i.carId), txt: `Reportó: ${i.tipo}`, bad: true }));
+  return ev.filter(e => e.t).sort((a, b) => b.t - a.t).slice(0, 25);
+}
+function renderMonitor() {
+  if (S.tab !== "monitoreo" || !S.isAdmin) return;
+  const now = Date.now(), day = today();
+  $("#mon-day").textContent = fmtDay(day); $("#mon-clock").textContent = "Actualizado " + new Date(now).toLocaleTimeString("es-MX", { hour12: false });
+  const states = S.cars.map(c => liveState(c, now));
+  const W = 640, H = 520, PAD = 30;
+  const pts = states.flatMap(s => [s.base, ...s.stops, s.pos]).filter(hasLoc);
+  const stat = $("#mon-static"), layer = $("#mon-cars");
+  if (!pts.length) { stat.innerHTML = `<text x="${W / 2}" y="${H / 2}" text-anchor="middle" fill="var(--muted)" font-size="14">Agrega la base de los autos y servicios con ubicación para verlos aquí</text>`; layer.innerHTML = ""; MON.sig = ""; }
+  else {
+    const sig = JSON.stringify(states.map(s => [s.car.id, s.base, s.stops.map(o => [o.id, o.lat, o.lng, o.status, o.order])]));
+    if (sig !== MON.sig) {
+      MON.sig = sig;
+      const lat0 = pts.reduce((a, p) => a + p.lat, 0) / pts.length, lng0 = pts.reduce((a, p) => a + p.lng, 0) / pts.length;
+      const kx = 111.32 * Math.cos(lat0 * Math.PI / 180), ky = 110.574;
+      const xy = p => ({ x: (p.lng - lng0) * kx, y: -(p.lat - lat0) * ky });
+      const all = pts.map(xy); const minX = Math.min(...all.map(p => p.x)) - 1, maxX = Math.max(...all.map(p => p.x)) + 1, minY = Math.min(...all.map(p => p.y)) - 1, maxY = Math.max(...all.map(p => p.y)) + 1;
+      const sc = Math.min((W - PAD * 2) / Math.max(maxX - minX, 3), (H - PAD * 2) / Math.max(maxY - minY, 3)); const cx = (minX + maxX) / 2, cy = (minY + maxY) / 2;
+      MON.P = p => { const q = xy(p); return { x: W / 2 + (q.x - cx) * sc, y: H / 2 + (q.y - cy) * sc }; };
+      const step = (W / sc) > 40 ? 5 : (W / sc) > 16 ? 2 : 1; let g = "";
+      for (let k = Math.floor((cx - W / 2 / sc) / step) * step; k <= cx + W / 2 / sc; k += step) { const x = W / 2 + (k - cx) * sc; g += `<line x1="${x}" y1="0" x2="${x}" y2="${H}" stroke="var(--line)" opacity=".6"/>`; }
+      for (let k = Math.floor((cy - H / 2 / sc) / step) * step; k <= cy + H / 2 / sc; k += step) { const y = H / 2 + (k - cy) * sc; g += `<line x1="0" y1="${y}" x2="${W}" y2="${y}" stroke="var(--line)" opacity=".6"/>`; }
+      for (const s of states) {
+        const col = carColor(s.car); const path = [s.base, ...s.stops].filter(hasLoc).map(MON.P);
+        if (path.length > 1) g += `<polyline points="${path.map(p => p.x.toFixed(1) + "," + p.y.toFixed(1)).join(" ")}" fill="none" stroke="${col}" stroke-width="2" stroke-dasharray="4 5" stroke-opacity=".7"/>`;
+        const doneN = s.stops.filter(o => o.status === "completado" || o.status === "en_curso").length;
+        const trav = [s.base, ...s.stops.slice(0, doneN)].filter(hasLoc).map(MON.P);
+        if (trav.length > 1) g += `<polyline points="${trav.map(p => p.x.toFixed(1) + "," + p.y.toFixed(1)).join(" ")}" fill="none" stroke="${col}" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>`;
+        if (hasLoc(s.base)) { const b = MON.P(s.base); g += `<rect x="${b.x - 6}" y="${b.y - 6}" width="12" height="12" rx="2" fill="var(--surface)" stroke="${col}" stroke-width="2"><title>${esc(s.car.nombre)} · base</title></rect>`; }
+        s.stops.forEach(o => { const p = MON.P(o), dn = o.status === "completado"; g += `<g><circle cx="${p.x}" cy="${p.y}" r="8" fill="${dn ? col : "var(--surface)"}" stroke="${col}" stroke-width="2"/><text x="${p.x}" y="${p.y + 3.3}" text-anchor="middle" font-size="9.5" font-weight="600" fill="${dn ? "#fff" : col}">${o.order ?? ""}</text><title>${esc(o.cliente)} · ${STATUS_LABEL[o.status]}</title></g>`; });
+      }
+      g += `<text x="12" y="${H - 10}" font-size="10.5" fill="var(--muted)">cuadrícula ${step} km · N ↑</text>`;
+      stat.innerHTML = g; layer.innerHTML = "";
+    }
+    for (const s of states) {
+      let mk = layer.querySelector(`[data-car="${s.car.id}"]`);
+      if (!mk) {
+        mk = document.createElementNS("http://www.w3.org/2000/svg", "g"); mk.setAttribute("class", "mk"); mk.dataset.car = s.car.id;
+        const n = S.cars.indexOf(s.car) + 1; const col = carColor(s.car);
+        mk.innerHTML = `<g class="hd"><path d="M0,-25 L7,-14 L-7,-14 Z" fill="${col}"/></g><circle r="14" fill="${col}" stroke="var(--surface)" stroke-width="3"/><text y="4.5" text-anchor="middle" font-size="12" font-weight="600" fill="#fff">${n}</text><title></title>`;
+        layer.append(mk);
+      }
+      if (!hasLoc(s.pos)) { mk.style.display = "none"; continue; }
+      mk.style.display = ""; const p = MON.P(s.pos);
+      mk.style.transform = `translate(${p.x.toFixed(1)}px, ${p.y.toFixed(1)}px)`;
+      const hd = mk.querySelector(".hd"); hd.setAttribute("transform", `rotate(${s.heading.toFixed(0)})`); hd.style.display = s.estado === "camino" || s.estado === "llegando" ? "" : "none";
+      mk.querySelector("title").textContent = `${s.car.nombre} · ${s.label}`;
+      mk.querySelector("circle").setAttribute("stroke", s.estado === "fuera" ? "var(--bad)" : "var(--surface)");
+    }
+  }
+  $("#mon-units").innerHTML = states.map(s => { const col = carColor(s.car); const pct = s.total ? Math.round(s.done / s.total * 100) : 0;
+    return `<div class="unit"><div class="unit-h"><span class="dot" style="width:12px;height:12px;border-radius:3px;background:${col}"></span><h3>${esc(s.car.nombre)}</h3><span class="chip ${s.estado}">${esc(s.label)}</span><span class="right">${s.done}/${s.total} servicios</span></div>
+      <div class="big">${s.text || ""}</div>
+      ${s.estado === "camino" || s.estado === "servicio" || s.estado === "llegando" ? `<div class="bar" title="Avance del tramo actual"><i style="width:${Math.round((s.progress || 0) * 100)}%;background:${col}"></i></div>` : ""}
+      <div class="small muted">${s.car.tripulacion ? esc(s.car.tripulacion) + " · " : ""}Ruta del día al ${pct}%${hasLoc(s.pos) ? ` · <a href="${mapsLink(s.pos)}" target="_blank" rel="noopener">zona aproximada ↗</a>` : ""}</div></div>`; }).join("") || `<div class="empty"><h3>Sin autos</h3><p>Registra los autos en «Autos y ajustes».</p></div>`;
+  const ev = monFeed(day);
+  $("#mon-feed").innerHTML = ev.length ? ev.map(e => `<li class="${e.bad ? "bad" : ""}"><span class="t">${hhmm(e.t)}</span><span class="d" style="background:${e.car ? carColor(e.car) : "var(--muted)"}"></span><span>${esc(e.car?.nombre || "")} · ${esc(e.txt)}</span></li>`).join("") : `<li style="grid-template-columns:1fr"><span class="muted">Aún no hay avisos del personal hoy.</span></li>`;
+}
+setInterval(renderMonitor, 5000);
+
+function render() {
+  const nc = S.cars.length; $("#brand-sub").textContent = `${nc ? nc + " auto" + (nc === 1 ? "" : "s") + " · " : ""}zonas de ${Math.min(MAX_RADIO, +S.cfg.radio || 5)} km a la redonda`;
+  renderKpis(); renderMap(); renderRoutes(); renderPending(); renderIncidents(); renderSvcTable(); renderField(); renderFleet(); renderCfg(); renderMonitor();
+  if (!S.canWrite) $$("form button, #btn-recalc").forEach(b => b.disabled = true);
+  if (typeof renderImport === "function") renderImport();
+}
+
+// ---------- Pestañas ----------
+function setTab(t) {
+  if (t === "monitoreo" && !S.isAdmin) t = "tablero";
+  S.tab = t; try { localStorage.setItem("tab", t); } catch (e) {}
+  $$("nav.tabs button").forEach(b => b.setAttribute("aria-selected", String(b.dataset.tab === t)));
+  $$("section.view").forEach(v => v.hidden = v.id !== "view-" + t);
+  if (t === "monitoreo") { MON.sig = ""; renderMonitor(); }
+}
+$$("nav.tabs button").forEach(b => b.onclick = () => setTab(b.dataset.tab));
+document.addEventListener("click", e => { const g = e.target.closest("[data-goto]"); if (g) setTab(g.dataset.goto); });
+
+// ---------- Acciones ----------
+$("#day").value = S.day; $("#svc-day").value = S.svcDay; $("#svc-fecha").value = S.svcDay;
+$("#day").onchange = e => { S.day = e.target.value || today(); render(); };
+$("#svc-day").onchange = e => { S.svcDay = e.target.value || today(); renderSvcTable(); };
+$("#btn-recalc").onclick = () => recalc(S.day);
+
+async function makeCars() {
+  try { for (let i = 1; i <= 3; i++) await write("cars/auto" + i, { nombre: "Auto " + i, placas: "", tripulacion: "", base: null, activo: true, n: i }); toast("Se crearon los 3 autos. Agrega su base de salida en «Autos y ajustes»."); }
+  catch (e) { dbErr(e); }
+}
+async function addCar() {
+  const n = Math.max(0, ...S.cars.map(c => +c.n || 0)) + 1;
+  let id = "auto" + n; while (carById(id)) id += "b";
+  try { await write("cars/" + id, { nombre: "Auto " + n, placas: "", tripulacion: "", base: S.cars.find(c => hasLoc(c.base))?.base || null, activo: true, n }); toast(`Se agregó Auto ${n}. Captura su base de salida y recalcula las rutas.`, { label: "Recalcular hoy", run: () => recalc(S.day, { keep: true }) }); }
+  catch (e) { dbErr(e); }
+}
+async function removeCar(id) {
+  const car = carById(id); if (!car) return;
+  const mine = S.services.filter(s => s.carId === id);
+  const dates = new Set(mine.filter(s => s.status === "pendiente" || s.status === "en_curso").map(s => s.fecha));
+  for (const s of mine) if (s.status === "pendiente" || s.status === "en_curso") { const body = { carId: null, order: null, zone: null, zoneLat: null, zoneLng: null, status: "pendiente" }; await write("services/" + s.id, body, "update"); Object.assign(s, body); }
+  await S.db.doc("cars/" + id).delete();
+  S.cars = S.cars.filter(c => c.id !== id); if (S.fieldCar === id) { S.fieldCar = null; try { localStorage.removeItem("fieldCar"); } catch (e) {} }
+  for (const d of [...dates].sort()) await recalc(d, { quiet: true, keep: true });
+  document.activeElement?.blur(); render();
+  toast(`${car.nombre} se quitó de la flota${dates.size ? "; sus servicios pendientes se repartieron entre los demás autos" : ""}.`);
+}
+const pendingDel = new Set();
+document.addEventListener("click", async e => {
+  const b = e.target.closest("button"); if (!b) return;
+  if (b.id === "btn-make-cars") return makeCars();
+  if (b.id === "btn-add-car") { b.disabled = true; await addCar(); b.disabled = !S.canWrite; return; }
+  const act = b.dataset.act, id = b.dataset.id; if (!act) return;
+  try {
+    if (act === "pick") { S.fieldCar = id; try { localStorage.setItem("fieldCar", id); } catch (e2) {} $("#inc-car").value = id; renderField(); }
+    if (act === "depart") { await write("cars/" + id, { salida: { fecha: today(), at: new Date().toISOString() } }, "update"); toast("Salida registrada. ¡Buen camino!"); }
+    if (act === "start") { await write("services/" + id, { status: "en_curso", inicio: new Date().toISOString() }, "update"); toast("Servicio iniciado."); }
+    if (act === "done") { await write("services/" + id, { status: "completado", fin: new Date().toISOString() }, "update"); toast("Servicio marcado como terminado."); }
+    if (act === "resolve") {
+      const inc = S.incidents.find(i => i.id === id);
+      await write("incidents/" + id, { status: "resuelto", resuelto: new Date().toISOString() }, "update");
+      if (inc?.impacto === "bloquea") toast(`${carById(inc.carId)?.nombre || "El auto"} vuelve a estar disponible.`, { label: "Recalcular rutas", run: () => recalc(inc.fecha) });
+      else toast("Reporte marcado como resuelto.");
+    }
+    if (act === "del-car") {
+      const key = "car:" + id;
+      if (!pendingDel.has(key)) { pendingDel.add(key); b.textContent = "¿Quitar? Confirmar"; b.classList.add("danger"); setTimeout(() => { pendingDel.delete(key); if (b.isConnected) { b.textContent = "Quitar auto"; b.classList.remove("danger"); } }, 4000); return; }
+      pendingDel.delete(key); b.disabled = true; await removeCar(id);
+    }
+    if (act === "edit") loadSvc(id);
+    if (act === "del") {
+      if (!pendingDel.has(id)) { pendingDel.add(id); b.textContent = "¿Eliminar? Confirmar"; b.classList.add("danger"); setTimeout(() => { pendingDel.delete(id); if (b.isConnected) { b.textContent = "Eliminar"; b.classList.remove("danger"); } }, 4000); return; }
+      pendingDel.delete(id); const s = S.services.find(x => x.id === id); await S.db.doc("services/" + id).delete(); toast("Servicio eliminado."); if (s) recalc(s.fecha, { quiet: true, keep: true });
+    }
+  } catch (err) { dbErr(err); }
+});
+// Asignación manual desde la tabla de servicios
+document.addEventListener("change", async e => {
+  const el = e.target; if (el.dataset.act !== "assign") return;
+  const s = S.services.find(x => x.id === el.dataset.id); if (!s) return;
+  const car = carById(el.value); el.disabled = true;
+  const body = car
+    ? { carId: car.id, manual: true, zone: null, zoneLat: null, zoneLng: null, fueraRadio: null, order: null, ...(s.status === "reprogramar" ? { status: "pendiente" } : {}) }
+    : { carId: null, manual: null, zone: null, zoneLat: null, zoneLng: null, fueraRadio: null, order: null };
+  try {
+    await write("services/" + s.id, body, "update"); Object.assign(s, body);
+    await recalc(s.fecha, { quiet: true, keep: true });
+    const tl = car ? timeline(car, s.fecha).stops.find(o => o.s.id === s.id) : null;
+    toast(car ? `${s.cliente}: asignado a mano a ${car.nombre}${tl ? `, parada #${s.order ?? ""}, llegada ~${fmtMin(tl.arrive)}` : ""}${!hasLoc(s) ? " (sin ubicación: va al final de la ruta)" : ""}${tl && (tl.tarde > TOL || tl.late) ? ". Ojo: no llega a tiempo o sale de la jornada." : "."}` : `${s.cliente}: quedó sin asignar.`);
+  } catch (err) { dbErr(err); }
+  finally { el.disabled = false; }
+});
+document.addEventListener("change", async e => {
+  const el = e.target; if (el.dataset.act !== "status") return;
+  const s = S.services.find(x => x.id === el.dataset.id); if (!s) return;
+  const body = { status: el.value }; if (el.value === "reprogramar" || el.value === "cancelado") Object.assign(body, { carId: null, order: null, zone: null, manual: null });
+  try { await write("services/" + s.id, body, "update"); if (el.value !== "completado") await recalc(s.fecha, { quiet: true, keep: true }); toast("Estado actualizado."); } catch (err) { dbErr(err); }
+});
+
+// Formulario de servicio
+function coordsHint() {
+  const p = parseCoords($("#svc-coords").value); const a = $("#btn-verify");
+  if (p) { a.hidden = false; a.href = mapsLink(p); $("#coords-hint").textContent = `Ubicación leída: ${fmtCoords(p)}${$("#svc-coords").dataset.fuente === "claude" ? " (aproximada, verifícala)" : ""}`; }
+  else { a.hidden = true; $("#coords-hint").textContent = $("#svc-coords").value.trim() ? "No reconozco ese formato. Usa «19.4326, -99.1332» o un enlace de Google Maps." : "Pega las coordenadas o el enlace que comparte el cliente. Si no lo tienes, usa «Ubicar dirección»."; }
+}
+$("#svc-coords").addEventListener("input", () => { delete $("#svc-coords").dataset.fuente; coordsHint(); });
+// El formulario tiene tres modos: "new" (capturar), "view" (consultar un servicio de la lista) y "edit".
+function setFormMode(mode) {
+  const ro = mode === "view";
+  $$("#svc-form input:not([type=hidden]), #svc-form textarea").forEach(el => { el.readOnly = ro; });
+  $("#svc-form").classList.toggle("viewing", ro);
+  $("#svc-save").hidden = ro; $("#svc-edit-btn").hidden = !ro;
+  $("#btn-geo").hidden = ro || !sampleFn;
+  $("#svc-cancel-edit").hidden = mode === "new"; $("#svc-cancel-edit").textContent = ro ? "Nuevo servicio" : "Cancelar edición";
+  $("#svc-save").textContent = mode === "edit" ? "Guardar cambios" : "Guardar y asignar";
+}
+function markSelected(id) { S.selSvc = id || null; $$("#svc-table tr[data-svc]").forEach(tr => tr.classList.toggle("sel", tr.dataset.svc === S.selSvc)); }
+function resetSvcForm() { $("#svc-form").reset(); $("#svc-id").value = ""; $("#svc-fecha").value = S.svcDay; delete $("#svc-coords").dataset.fuente; $("#svc-form-title").textContent = "Servicio confirmado"; setFormMode("new"); markSelected(null); coordsHint(); }
+function loadSvc(id, mode = "edit") {
+  const s = S.services.find(x => x.id === id); if (!s) return;
+  $("#svc-id").value = s.id; $("#svc-cliente").value = s.cliente || ""; $("#svc-tel").value = s.telefono || ""; $("#svc-dir").value = s.direccion || ""; $("#svc-ref").value = s.referencias || ""; $("#svc-desc").value = s.descripcion || ""; $("#svc-pago").value = s.formaPago || "";
+  $("#svc-fecha").value = s.fecha; $("#svc-hora").value = s.hora || ""; $("#svc-dur").value = s.duracion || ""; $("#svc-monto").value = s.monto ?? ""; $("#svc-coords").value = fmtCoords(s); $("#svc-notas").value = s.notas || "";
+  if (s.coordFuente === "claude") $("#svc-coords").dataset.fuente = "claude"; else delete $("#svc-coords").dataset.fuente;
+  const car = carById(s.carId);
+  $("#svc-form-title").textContent = mode === "view" ? `${s.cliente}${car ? " · " + car.nombre + (s.order ? " #" + s.order : "") : " · sin asignar"}` : "Editar servicio";
+  setFormMode(mode); markSelected(s.id); coordsHint(); setTab("servicios");
+  if (mode === "edit") $("#svc-cliente").focus();
+}
+$("#svc-cancel-edit").onclick = resetSvcForm;
+$("#svc-edit-btn").onclick = () => { const id = $("#svc-id").value; if (id) loadSvc(id, "edit"); };
+// Al seleccionar un servicio de la lista se muestran sus datos en «Servicio confirmado».
+$("#svc-table").addEventListener("click", e => {
+  if (e.target.closest("button, select, a, input")) return;
+  const tr = e.target.closest("tr[data-svc]"); if (!tr) return;
+  loadSvc(tr.dataset.svc, "view");
+  if (window.matchMedia("(max-width: 900px)").matches) $("#svc-form").scrollIntoView({ behavior: "smooth", block: "start" });
+});
+$("#svc-form").addEventListener("submit", async e => {
+  e.preventDefault();
+  if ($("#svc-form").classList.contains("viewing")) return; // en modo consulta no se guarda; primero «Editar»
+  const loc = parseCoords($("#svc-coords").value);
+  const id = $("#svc-id").value || ("s" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6));
+  const prev = S.services.find(x => x.id === id);
+  const fecha = $("#svc-fecha").value;
+  const body = {
+    cliente: $("#svc-cliente").value.trim(), telefono: $("#svc-tel").value.trim(), direccion: $("#svc-dir").value.trim(), referencias: $("#svc-ref").value.trim(),
+    descripcion: $("#svc-desc").value.trim(), formaPago: $("#svc-pago").value.trim(),
+    fecha, hora: $("#svc-hora").value || "", duracion: +$("#svc-dur").value || null, monto: $("#svc-monto").value === "" ? null : Math.round(+$("#svc-monto").value * 100) / 100, notas: $("#svc-notas").value.trim(),
+    lat: loc ? loc.lat : null, lng: loc ? loc.lng : null, coordFuente: loc ? ($("#svc-coords").dataset.fuente || "manual") : null,
+    status: prev && prev.fecha === fecha ? prev.status : "pendiente",
+    carId: prev && prev.fecha === fecha ? prev.carId ?? null : null, order: prev && prev.fecha === fecha ? prev.order ?? null : null,
+    zone: prev && prev.fecha === fecha ? prev.zone ?? null : null, zoneLat: prev && prev.fecha === fecha ? prev.zoneLat ?? null : null, zoneLng: prev && prev.fecha === fecha ? prev.zoneLng ?? null : null,
+    creado: prev?.creado || new Date().toISOString(), ejemplo: !!prev?.ejemplo,
+    manual: prev && prev.fecha === fecha ? prev.manual ?? null : null, fueraRadio: prev && prev.fecha === fecha ? prev.fueraRadio ?? null : null,
+    ...(prev?.origen ? { origen: prev.origen } : {}), ...(prev?.inicio ? { inicio: prev.inicio } : {}), ...(prev?.fin ? { fin: prev.fin } : {})
+  };
+  if (prev && (prev.lat !== body.lat || prev.lng !== body.lng) && body.status === "pendiente") body.carId = null;
+  const btn = $("#svc-save"); btn.disabled = true;
+  try {
+    await write("services/" + id, body);
+    upsertLocal("services", { id, ...body });
+    if (!loc) toast("Guardado sin ubicación: no se puede asignar hasta agregar coordenadas.");
+    const r = await recalc(fecha, { quiet: true, keep: true });
+    if (prev && prev.fecha !== fecha) await recalc(prev.fecha, { quiet: true, keep: true });
+    const now = r?.plan?.get(id) || S.services.find(x => x.id === id); const car = carById(now?.carId);
+    if (loc) toast(car ? `${body.cliente}: asignado a ${car.nombre}, parada #${now.order}${now.zone ? " (zona Z" + now.zone + ")" : ""}.` : `${body.cliente}: guardado, pero no hay auto con cupo ese día.`);
+    S.svcDay = fecha; $("#svc-day").value = fecha; resetSvcForm(); renderSvcTable();
+  } catch (err) { dbErr(err); }
+  finally { btn.disabled = !S.canWrite; }
+});
+
+// Carga masiva desde Excel
+const IMP = { rows: [], busy: false, file: "" };
+let xlsxReady = null;
+function loadXLSX() {
+  if (window.XLSX) return Promise.resolve(window.XLSX);
+  return xlsxReady ||= new Promise((ok, bad) => { const s = document.createElement("script"); s.src = "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"; s.onload = () => ok(window.XLSX); s.onerror = () => { xlsxReady = null; bad(new Error("xlsx")); }; document.head.append(s); });
+}
+const normKey = k => String(k ?? "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]/g, "");
+const dupKey = (c, d, f) => normKey(c) + "|" + normKey(d) + "|" + f;
+// Lugar de una fila: sus coordenadas (redondeadas) o, si no trae, su dirección.
+const placeKey = (loc, dir) => hasLoc(loc) ? loc.lat.toFixed(4) + "_" + loc.lng.toFixed(4) : dir;
+const pad2 = n => String(n).padStart(2, "0");
+const IMP_COLS = {
+  cliente: ["cliente", "nombre", "nombrecliente", "nombredelcliente", "empresa", "razonsocial"],
+  telefono: ["telefono", "tel", "celular", "movil", "whatsapp", "contacto"],
+  direccion: ["direccion", "domicilio", "direcciondelservicio", "direccionservicio", "zona"],
+  referencias: ["referencias", "referencia", "entrecalles"],
+  fecha: ["fecha", "fechadeservicio", "fechaservicio", "fechadelservicio"],
+  diasem: ["dia", "diadelasemana", "diasemana"],
+  hora: ["hora", "horapreferida", "horario", "horadellegada"],
+  duracion: ["duracion", "duracionmin", "duracionminutos", "minutos"],
+  coords: ["ubicacion", "coordenadas", "coords", "latlng", "maps", "googlemaps", "enlace", "link", "liga", "url", "mapa", "enlacemaps", "ubicaciongoogle"],
+  lat: ["lat", "latitud"], lng: ["lng", "lon", "long", "longitud"],
+  notas: ["notas", "nota", "observaciones", "comentarios"],
+  descripcion: ["descripcion", "descripciondelservicio", "servicio", "tipodeservicio", "tiposervicio", "tipodelimpieza", "detalle"],
+  formaPago: ["formadepago", "formadpago", "formapago", "pago", "metododepago", "metodopago", "mediodepago"],
+  monto: ["monto", "precio", "importe", "costo", "total", "cobro", "tarifa", "montomxn"]
+};
+const MESES = { ene: 1, feb: 2, mar: 3, abr: 4, may: 5, jun: 6, jul: 7, ago: 8, sep: 9, set: 9, oct: 10, nov: 11, dic: 12 };
+const DOW = ["domingo", "lunes", "martes", "miercoles", "jueves", "viernes", "sabado"];
+// Sin año: el año (actual, siguiente o anterior) en que ese día cae en el día de la semana indicado.
+function pickYear(m, d, diaName) {
+  const y0 = new Date().getFullYear(), want = DOW.indexOf(normKey(diaName));
+  if (want >= 0) for (const y of [y0, y0 + 1, y0 - 1]) if (new Date(y, m - 1, d).getDay() === want) return y;
+  return y0;
+}
+// Devuelve "AAAA-MM-DD", null si viene vacía o undefined si no se entiende.
+function impDate(v, diaName = "") {
+  if (v == null || v === "") return null;
+  const ok = (y, m, d) => m >= 1 && m <= 12 && d >= 1 && d <= 31 ? `${y}-${pad2(m)}-${pad2(d)}` : undefined;
+  if (typeof v === "number") return v > 20000 && v < 80000 ? new Date((Math.round(v) - 25569) * 86400000).toISOString().slice(0, 10) : undefined; // fecha de Excel (se ignora la hora)
+  const t = String(v).trim();
+  let m = t.match(/^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})/); if (m) return ok(m[1], +m[2], +m[3]);
+  m = t.match(/^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{2,4})/); if (m) return ok(m[3].length === 2 ? "20" + m[3] : m[3], +m[2], +m[1]); // día/mes/año
+  m = t.match(/^(\d{1,2})[-\/.](\d{1,2})$/); if (m) return ok(pickYear(+m[2], +m[1], diaName), +m[2], +m[1]); // día/mes sin año
+  const w = t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/^[a-z]+,?\s+(?=\d)/, ""); // quita "lunes " al inicio
+  m = w.match(/^(\d{1,2})\s*(?:de\s+)?([a-z]{3,})\.?(?:\s*(?:de|del)?\s*(\d{4}))?$/);
+  if (m && MESES[m[2].slice(0, 3)]) { const mo = MESES[m[2].slice(0, 3)]; return ok(m[3] ? +m[3] : pickYear(mo, +m[1], diaName), mo, +m[1]); }
+  return undefined;
+}
+// Devuelve "HH:MM", "" si viene vacía o undefined si no se entiende.
+function impTime(v) {
+  if (v == null || v === "") return "";
+  if (typeof v === "number") { if (v >= 0 && v < 1) return fmtMin(Math.round(v * 1440) % 1440); if (Number.isInteger(v) && v < 24) return pad2(v) + ":00"; return undefined; }
+  const m = String(v).trim().toLowerCase().match(/^(\d{1,2})(?:[:.](\d{2}))?(?::\d{2})?\s*(a\.?\s*m\.?|p\.?\s*m\.?|hrs?\.?)?$/); if (!m) return undefined;
+  let h = +m[1]; const mi = +(m[2] || 0);
+  if (m[3] && m[3][0] !== "h") { const pm = m[3][0] === "p"; if (pm && h < 12) h += 12; if (!pm && h === 12) h = 0; }
+  return h > 23 || mi > 59 ? undefined : pad2(h) + ":" + pad2(mi);
+}
+async function readImport(file) {
+  const X = await loadXLSX();
+  // En CSV se leen los textos tal cual, para que «05/11/2026» se entienda como día/mes y no como fecha de EE. UU.
+  const wb = X.read(await file.arrayBuffer(), { type: "array", raw: /\.(csv|txt)$/i.test(file.name) });
+  const ws = wb.Sheets[wb.SheetNames[0]]; if (!ws || !ws["!ref"]) return { error: "La primera hoja del archivo está vacía." };
+  const top = X.utils.decode_range(ws["!ref"]).s.r;
+  const grid = X.utils.sheet_to_json(ws, { header: 1, raw: true, defval: "", blankrows: true });
+  const colsOf = row => { const map = {}; row.forEach((h, i) => { const k = normKey(h); for (const [f, al] of Object.entries(IMP_COLS)) if (map[f] == null && al.includes(k)) map[f] = i; }); return map; };
+  let hi = -1, map = null;
+  for (let i = 0; i < Math.min(10, grid.length); i++) { const m = colsOf(grid[i]); if (m.cliente != null && m.direccion != null) { hi = i; map = m; break; } }
+  if (hi < 0) return { error: "No encontré las columnas «Cliente» y «Dirección» (o «Zona») en los primeros renglones de la primera hoja." };
+  if (map.coords == null && (map.lat == null || map.lng == null)) { // la columna de enlaces puede venir con otro nombre
+    const used = new Set(Object.values(map)), body = grid.slice(hi + 1, hi + 81);
+    const width = Math.max((grid[hi] || []).length, ...body.map(r => r.length));
+    let best = -1, bestN = 0;
+    for (let ci = 0; ci < width; ci++) {
+      if (used.has(ci)) continue; let n = 0, tot = 0;
+      body.forEach(r => { const v = String(r[ci] ?? "").trim(); if (!v) return; tot++; if (parseCoords(v) || isShortLink(v) || /google\.[a-z.]+\/maps|maps\.google\./i.test(v)) n++; });
+      if (tot && n / tot >= .5 && n > bestN) { best = ci; bestN = n; }
+    }
+    if (best >= 0) map.coords = best;
+  }
+  // Servicios existentes por cliente y fecha, para decidir si una fila es nueva o actualiza uno ya registrado.
+  const byKey = new Map();
+  S.services.forEach(s => { const k = normKey(s.cliente) + "|" + s.fecha; if (!byKey.has(k)) byKey.set(k, []); byKey.get(k).push(s); });
+  const taken = new Set(), seenNew = new Set(), has = f => map[f] != null;
+  const rows = [];
+  grid.slice(hi + 1).forEach((r, j) => {
+    if (!r.some(c => String(c).trim())) return;
+    const g = f => map[f] == null ? "" : r[map[f]]; const txt = f => String(g(f) ?? "").trim();
+    const errs = []; const cliente = txt("cliente"), direccion = txt("direccion");
+    if (!cliente) errs.push("falta cliente"); if (!direccion) errs.push("falta dirección");
+    const diaTxt = txt("diasem"); let fecha = impDate(g("fecha"), diaTxt);
+    if (fecha == null && diaTxt) { const f2 = impDate(g("diasem")); if (f2) fecha = f2; } // la columna Día trae la fecha
+    if (fecha === undefined) errs.push("fecha no válida"); if (!fecha) fecha = S.svcDay;
+    const warns = [], dw = DOW.indexOf(normKey(diaTxt));
+    if (!errs.includes("fecha no válida") && dw >= 0 && new Date(fecha + "T12:00:00").getDay() !== dw) warns.push(`el ${fecha.split("-").reverse().join("/")} no es ${diaTxt.toLowerCase()}`);
+    const hora = impTime(g("hora")); if (hora === undefined) errs.push("hora no válida");
+    let loc = parseCoords(txt("coords"));
+    if (!loc && map.lat != null && map.lng != null) { const la = parseFloat(String(g("lat")).replace(",", ".")), ln = parseFloat(String(g("lng")).replace(",", ".")); if (Math.abs(la) <= 90 && Math.abs(ln) <= 180) loc = { lat: la, lng: ln }; }
+    const short = !loc && isShortLink(txt("coords"));
+    if (!loc && txt("coords") && !short) errs.push("ubicación no válida");
+    const duracion = Math.round(+String(g("duracion")).replace(/[^\d.]/g, "")) || null;
+    const monto = impMoney(g("monto")); if (monto === undefined) warns.push("monto no válido (se deja vacío)");
+    const data = { cliente, telefono: txt("telefono"), direccion, referencias: txt("referencias"), fecha, hora: hora || "", duracion, monto: monto ?? null, notas: txt("notas"), descripcion: txt("descripcion"), formaPago: txt("formaPago"), lat: loc ? loc.lat : null, lng: loc ? loc.lng : null, coordFuente: loc ? "manual" : null };
+    const row = { fila: top + hi + j + 2, errs, warns, short, kind: "new", dup: false, data };
+    if (!errs.length) {
+      const cands = (byKey.get(normKey(cliente) + "|" + fecha) || []).filter(s => !taken.has(s.id));
+      const match = cands.length === 1 ? cands[0] : cands.find(s => normKey(s.direccion) === normKey(direccion) || (loc && hasLoc(s) && hav(loc, s) < 0.05)) || null;
+      if (match) {
+        taken.add(match.id);
+        // Solo cambia lo que el archivo trae con un valor distinto; una celda vacía no borra lo capturado.
+        const ch = {};
+        for (const f of ["direccion", "telefono", "referencias", "notas", "descripcion", "formaPago", "hora"]) if (has(f) && data[f] && String(match[f] ?? "").trim() !== data[f]) ch[f] = data[f];
+        if (has("duracion") && duracion && (match.duracion ?? null) !== duracion) ch.duracion = duracion;
+        if (has("monto") && monto != null && (match.monto ?? null) !== monto) ch.monto = monto;
+        if (loc && (!hasLoc(match) || hav(loc, match) > 0.03)) Object.assign(ch, { lat: loc.lat, lng: loc.lng, coordFuente: "manual" });
+        Object.assign(row, { kind: Object.keys(ch).length ? "update" : "same", target: match.id, changes: ch, targetHasLoc: hasLoc(match) });
+      } else {
+        const key = dupKey(cliente, placeKey(loc, direccion), fecha);
+        if (seenNew.has(key)) row.dup = true; else seenNew.add(key);
+      }
+    }
+    rows.push(row);
+  });
+  if (!rows.length) return { error: "La hoja tiene encabezados pero ningún servicio." };
+  return { rows };
+}
+// Monto: número, "$1,200.50", "1.200,50"; null si viene vacío, undefined si no se entiende (p. ej. "GARANTIA").
+function impMoney(v) {
+  if (v == null || v === "") return null;
+  if (typeof v === "number") return v >= 0 ? Math.round(v * 100) / 100 : undefined;
+  let t = String(v).trim(); if (/^[-–—$\s]*$/.test(t)) return null; // celdas "$ -" de Excel
+  t = t.replace(/[^\d.,]/g, ""); if (!t) return undefined;
+  if (/,\d{1,2}$/.test(t) && !/\.\d/.test(t)) t = t.replace(/\./g, "").replace(",", "."); else t = t.replace(/,/g, "");
+  const n = parseFloat(t); return Number.isFinite(n) && n >= 0 ? Math.round(n * 100) / 100 : undefined;
+}
+const impReady = () => IMP.rows.filter(r => !r.errs.length && !r.dup && !r.done && (r.kind === "new" || r.kind === "update"));
+const CH_LABEL = { direccion: "dirección", telefono: "teléfono", referencias: "referencias", notas: "notas", descripcion: "descripción", formaPago: "forma de pago", hora: "hora", duracion: "duración", monto: "monto", lat: "ubicación" };
+const chList = r => Object.keys(r.changes || {}).filter(k => CH_LABEL[k]).map(k => CH_LABEL[k]);
+// Sin coordenadas y con dirección: lo nuevo, o lo que se actualiza y aún no tiene ubicación.
+const needsGeo = r => r.data.lat == null && r.data.direccion && (r.kind === "new" || (r.kind === "update" && !r.targetHasLoc));
+function renderImport() {
+  const go = $("#imp-go"), clr = $("#imp-clear");
+  go.disabled = !S.canWrite || IMP.busy; clr.disabled = IMP.busy;
+  if (!IMP.rows.length) { go.hidden = clr.hidden = true; return; }
+  const ready = impReady(), bad = IMP.rows.filter(r => r.errs.length), dup = IMP.rows.filter(r => r.dup);
+  const nuevos = ready.filter(r => r.kind === "new"), upd = ready.filter(r => r.kind === "update"), same = IMP.rows.filter(r => !r.errs.length && r.kind === "same" && !r.done);
+  const geo = ready.filter(needsGeo), noLoc = nuevos.filter(r => r.data.lat == null && !needsGeo(r)).length;
+  const days = new Set(ready.map(r => r.data.fecha));
+  const st = r => r.done ? `<span class="chip completado">${r.kind === "update" ? "Actualizado" : "Importado"}</span>`
+    : r.errs.length ? `<span class="chip late">${esc(r.errs.join(", "))}</span>`
+    : r.dup ? `<span class="chip zone">Repetido en el archivo</span>`
+    : r.kind === "same" ? `<span class="chip zone">Sin cambios</span>`
+    : (r.kind === "update" ? `<span class="chip en_curso">Actualizar: ${esc(chList(r).join(", "))}</span>` : `<span class="chip pendiente">Nuevo</span>`)
+      + (needsGeo(r) && sampleFn ? ' <span class="chip approx">Se ubicará con Claude</span>' : r.kind === "new" && r.data.lat == null ? ' <span class="chip approx">Sin ubicación</span>' : "")
+      + (r.warns || []).map(w => ` <span class="chip approx">${esc(w)}</span>`).join("");
+  const shown = IMP.rows.slice(0, 150);
+  const parts = [nuevos.length && `${nuevos.length} nuevos`, upd.length && `${upd.length} por actualizar`, same.length && `${same.length} sin cambios (se omiten)`, dup.length && `${dup.length} repetidos en el archivo (se omiten)`, bad.length && `${bad.length} con errores (se omiten)`].filter(Boolean);
+  $("#imp-preview").innerHTML = `<div class="notice" style="margin-bottom:10px"><b>${esc(IMP.file)}</b>: ${parts.join(" · ") || "nada que importar"}${days.size ? `, en ${days.size} día(s)` : ""}.${geo.length ? (sampleFn ? ` ${geo.length} sin coordenadas se ubicarán con Claude a partir de la dirección (ubicación aproximada).` : ` ${geo.length} sin coordenadas quedarán sin ubicación (la ubicación con Claude no está disponible en esta vista).`) : ""}${noLoc ? ` ${noLoc} nuevos no traen dirección ni ubicación.` : ""}${ready.some(r => (r.warns || []).some(w => w.startsWith("el "))) ? " Hay fechas que no coinciden con su día de la semana: revísalas." : ""}</div>
+    <div class="tbl-wrap" style="max-height:340px;overflow:auto"><table><thead><tr><th>Fila</th><th>Cliente</th><th>Fecha</th><th>Estado</th></tr></thead><tbody>${shown.map(r => `<tr><td class="mono">${r.fila}</td><td><b>${esc(r.data.cliente || "—")}</b><div class="addr">${esc(r.data.direccion)}</div></td><td class="mono" style="white-space:nowrap">${esc(r.data.fecha)}${r.data.hora ? " " + esc(r.data.hora) : ""}</td><td>${st(r)}</td></tr>`).join("")}</tbody></table></div>${IMP.rows.length > shown.length ? `<p class="small muted">Se muestran las primeras ${shown.length} de ${IMP.rows.length} filas.</p>` : ""}`;
+  go.hidden = !ready.length;
+  go.textContent = [nuevos.length && `Agregar ${nuevos.length} nuevo${nuevos.length === 1 ? "" : "s"}`, upd.length && `actualizar ${upd.length}`].filter(Boolean).join(", ") + " y asignar";
+  go.textContent = go.textContent.charAt(0).toUpperCase() + go.textContent.slice(1);
+  clr.hidden = false;
+}
+function clearImport() { IMP.rows = []; IMP.file = ""; $("#imp-file").value = ""; $("#imp-preview").innerHTML = ""; renderImport(); }
+$("#imp-file").addEventListener("change", async e => {
+  const file = e.target.files[0]; if (!file) return;
+  IMP.rows = []; IMP.file = file.name; renderImport(); $("#imp-preview").innerHTML = `<p class="small muted">Leyendo ${esc(file.name)}…</p>`;
+  try {
+    const r = await readImport(file);
+    if (r.error) { $("#imp-preview").innerHTML = `<div class="notice bad">${esc(r.error)}</div>`; return; }
+    IMP.rows = r.rows; renderImport();
+  } catch (err) { console.error(err); $("#imp-preview").innerHTML = `<div class="notice bad">No se pudo leer el archivo. Revisa que sea una hoja de Excel (.xlsx, .xls) o un .csv y que tengas conexión a internet.</div>`; }
+});
+$("#imp-clear").onclick = clearImport;
+// Ubica con Claude, por lotes, las filas sin coordenadas a partir de su dirección. Devuelve cuántas ubicó.
+const NOGEO = ["not_granted", "sampling_disabled", "not_declared", "capability_disabled", "capability_removed"];
+async function geoBatch(rows, onProgress) {
+  let ok = 0;
+  for (let i = 0; i < rows.length && sampleFn; i += 20) {
+    const part = rows.slice(i, i + 20); onProgress(i, part.length);
+    const items = part.map((r, k) => ({ id: k, direccion: r.data.direccion + (r.data.referencias ? ` (${r.data.referencias})` : "") }));
+    try {
+      const res = await sampleFn.json(`Eres un geocodificador para un servicio de limpieza en México${S.cfg.ciudad ? ` (zona de trabajo: ${S.cfg.ciudad} y su área metropolitana)` : ""}. Estima las coordenadas WGS84 de cada dirección.\n\nDirecciones (JSON):\n${JSON.stringify(items)}\n\nResponde solo con un arreglo JSON con un objeto por dirección, en el mismo orden: [{"id": número, "lat": número o null, "lng": número o null, "confianza": "alta" | "media" | "baja"}]. Usa null si no puedes ubicarla.`);
+      for (const o of Array.isArray(res) ? res : []) {
+        const r = part[+o?.id]; const lat = Number(o?.lat), lng = Number(o?.lng);
+        if (r && o?.lat != null && o?.lng != null && lat > 14 && lat < 33 && lng > -119 && lng < -86) { r.data.lat = Math.round(lat * 1e6) / 1e6; r.data.lng = Math.round(lng * 1e6) / 1e6; r.data.coordFuente = "claude"; ok++; }
+      }
+    } catch (e) {
+      if (NOGEO.includes(e?.code)) { sampleFn = null; $("#btn-geo").hidden = true; break; }
+      if (e?.code === "rate_limited") { toast("Claude alcanzó su límite de consultas; las filas restantes quedan sin ubicación."); break; }
+      // otro error: se sigue con el siguiente lote
+    }
+  }
+  return ok;
+}
+$("#imp-go").onclick = async () => {
+  const list = impReady(); if (!list.length || IMP.busy) return;
+  IMP.busy = true; renderImport(); const go = $("#imp-go"); const dates = new Set(); let added = 0, updated = 0;
+  const toGeo = list.filter(needsGeo); let geoOk = 0;
+  if (toGeo.length && sampleFn) geoOk = await geoBatch(toGeo, (i, k) => { go.textContent = `Ubicando con Claude ${i + 1}–${i + k} de ${toGeo.length}…`; });
+  try {
+    for (const r of list) {
+      go.textContent = `Guardando ${added + updated + 1} de ${list.length}…`;
+      if (r.kind === "update") {
+        const cur = S.services.find(x => x.id === r.target); if (!cur) continue;
+        const body = { ...r.changes };
+        if (!body.lat && r.data.lat != null && !hasLoc(cur)) Object.assign(body, { lat: r.data.lat, lng: r.data.lng, coordFuente: r.data.coordFuente }); // ubicada con Claude
+        if (!Object.keys(body).length) continue;
+        // Si cambió la ubicación de un servicio que no ha empezado, se vuelve a asignar (salvo si se asignó a mano).
+        if ("lat" in body && cur.status === "pendiente" && !cur.manual) Object.assign(body, { carId: null, order: null, zone: null, zoneLat: null, zoneLng: null, fueraRadio: null });
+        await write("services/" + cur.id, body, "update"); Object.assign(cur, body); r.done = true; dates.add(cur.fecha); updated++;
+      } else {
+        const id = "s" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+        const body = { ...r.data, status: "pendiente", carId: null, order: null, zone: null, zoneLat: null, zoneLng: null, creado: new Date().toISOString(), ejemplo: false, origen: "excel" };
+        await write("services/" + id, body); upsertLocal("services", { id, ...body }); r.done = true; dates.add(body.fecha); added++;
+      }
+    }
+  } catch (err) { dbErr(err); }
+  go.textContent = "Asignando rutas…";
+  for (const d of [...dates].sort()) await recalc(d, { quiet: true, keep: true });
+  IMP.busy = false;
+  if (added || updated) {
+    const sinLoc = list.filter(r => r.done && r.kind === "new" && r.data.lat == null).length;
+    toast(`${[added && `Se agregaron ${added}`, updated && `se actualizaron ${updated}`].filter(Boolean).join(" y ")} servicio(s) en ${dates.size} día(s)${geoOk ? `; ${geoOk} ubicados con Claude (aproximados)` : ""}${sinLoc ? `; ${sinLoc} sin ubicación quedaron por asignar` : ""}.`.replace(/^s/, "S"));
+    S.svcDay = [...dates].sort()[0]; $("#svc-day").value = S.svcDay; renderSvcTable();
+  }
+  if (list.every(r => r.done)) clearImport(); else renderImport();
+};
+
+// Descarga de todos los servicios a Excel
+let downloadsFn = null;
+$("#btn-export").onclick = async () => {
+  if (!downloadsFn) return;
+  if (!S.services.length) return toast("Aún no hay servicios para descargar.");
+  const btn = $("#btn-export"); btn.disabled = true; btn.textContent = "Preparando…";
+  try {
+    const X = await loadXLSX();
+    const list = S.services.slice().sort((a, b) => String(a.fecha).localeCompare(String(b.fecha)) || String(carById(a.carId)?.nombre || "zz").localeCompare(String(carById(b.carId)?.nombre || "zz")) || (a.order ?? 99) - (b.order ?? 99));
+    const rows = list.map(s => ({
+      "Fecha": s.fecha || "", "Hora": s.hora || "", "Cliente": s.cliente || "", "Teléfono": s.telefono || "", "Dirección": s.direccion || "", "Referencias": s.referencias || "",
+      "Duración (min)": s.duracion || "", "Monto": s.monto ?? "", "Forma de pago": s.formaPago || "", "Descripción del servicio": s.descripcion || "", "Latitud": hasLoc(s) ? s.lat : "", "Longitud": hasLoc(s) ? s.lng : "", "Ubicación aproximada": s.coordFuente === "claude" ? "Sí" : "",
+      "Auto": carById(s.carId)?.nombre || "", "Parada": s.order ?? "", "Zona": s.zone ? "Z" + s.zone : "", "Estado": STATUS_LABEL[s.status] || s.status || "",
+      "Inicio": s.inicio ? new Date(s.inicio).toLocaleString("es-MX", { hour12: false }) : "", "Fin": s.fin ? new Date(s.fin).toLocaleString("es-MX", { hour12: false }) : "",
+      "Notas": s.notas || "", "Ejemplo": s.ejemplo ? "Sí" : ""
+    }));
+    const ws = X.utils.json_to_sheet(rows);
+    ws["!cols"] = Object.keys(rows[0]).map(k => ({ wch: Math.min(50, Math.max(k.length, ...rows.map(r => String(r[k]).length)) + 2) }));
+    const wb = X.utils.book_new(); X.utils.book_append_sheet(wb, ws, "Servicios");
+    const buf = X.write(wb, { bookType: "xlsx", type: "array" });
+    await downloadsFn.save({ filename: `servicios-limpieza-${today()}.xlsx`, data: new Blob([buf]) });
+    toast(`Se descargaron ${rows.length} servicios.`);
+  } catch (e) {
+    const c = e?.code;
+    if (c === "declined") return;
+    if (c === "rate_limited") toast("Ya hay una descarga pendiente de confirmar.");
+    else if (c && c !== "bad_request") { downloadsFn = null; btn.hidden = true; toast("La descarga no está disponible en esta vista."); }
+    else { console.error(e); toast("No se pudo generar el archivo. Revisa tu conexión e intenta de nuevo."); }
+  } finally { btn.disabled = false; btn.textContent = "Descargar todo en Excel"; }
+};
+
+// Ubicar dirección con Claude
+let sampleFn = null, geoCtl = null;
+$("#btn-geo").onclick = async () => {
+  const dir = $("#svc-dir").value.trim(); if (!dir) { toast("Escribe primero la dirección."); $("#svc-dir").focus(); return; }
+  if (!sampleFn) { toast("La ubicación automática no está disponible aquí. Pega las coordenadas desde Google Maps."); return; }
+  const btn = $("#btn-geo"); btn.disabled = true; btn.textContent = "Ubicando…"; geoCtl = new AbortController();
+  try {
+    const r = await sampleFn.json(`Eres un geocodificador para un servicio de limpieza en México. Estima las coordenadas WGS84 de esta dirección${S.cfg.ciudad ? ` (ciudad de referencia: ${S.cfg.ciudad})` : ""}:\n\n"${dir}${$("#svc-ref").value ? " — " + $("#svc-ref").value : ""}"\n\nResponde solo con JSON: {"lat": número, "lng": número, "confianza": "alta" | "media" | "baja", "lugar": "colonia, municipio/alcaldía, estado identificados"}. Si no puedes ubicarla, responde {"lat": null, "lng": null, "confianza": "baja", "lugar": ""}.`, { signal: geoCtl.signal });
+    const lat = Number(r?.lat), lng = Number(r?.lng);
+    if (r?.lat == null || !Number.isFinite(lat) || !Number.isFinite(lng)) { toast("No se pudo ubicar la dirección. Pide al cliente su ubicación de Google Maps."); return; }
+    $("#svc-coords").value = `${lat.toFixed(5)}, ${lng.toFixed(5)}`; $("#svc-coords").dataset.fuente = "claude"; coordsHint();
+    toast(`Ubicación aproximada (${r.confianza || "media"}): ${r.lugar || ""}. Verifícala en Google Maps antes de guardar.`);
+  } catch (e) {
+    if (e?.code === "not_granted" || e?.code === "sampling_disabled") { sampleFn = null; btn.hidden = true; toast("La ubicación automática quedó desactivada. Pega las coordenadas desde Google Maps."); }
+    else if (e?.code === "rate_limited") toast("Demasiadas consultas. Intenta en un momento.");
+    else if (e?.code !== "cancelled") toast("No se pudo ubicar ahora. Intenta de nuevo o pega las coordenadas.");
+  } finally { btn.disabled = false; btn.textContent = "Ubicar dirección con Claude"; }
+};
+
+// Reporte de siniestro
+function syncImpact() { const v = $("input[name=impacto]:checked").value; $("#inc-delay-wrap").hidden = v !== "retraso"; $("#inc-svc-wrap").hidden = v !== "servicio"; }
+$$("input[name=impacto]").forEach(r => r.onchange = syncImpact);
+$("#inc-car").onchange = fillIncSvc;
+$("#inc-form").addEventListener("submit", async e => {
+  e.preventDefault();
+  const carId = $("#inc-car").value; const impacto = $("input[name=impacto]:checked").value; const fecha = today();
+  if (!carId) return toast("Elige el auto.");
+  const svcId = impacto === "servicio" ? $("#inc-svc").value : null;
+  if (impacto === "servicio" && !svcId) return toast("Ese auto no tiene servicios pendientes hoy.");
+  const id = "i" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+  const body = { carId, fecha, tipo: $("#inc-tipo").value, impacto, retrasoMin: impacto === "retraso" ? (+$("#inc-delay").value || 0) : 0, servicioId: svcId, descripcion: $("#inc-desc").value.trim(), reporta: $("#inc-quien").value.trim(), ubicacion: $("#inc-coords").value.trim(), status: "abierto", creado: new Date().toISOString() };
+  const btn = $("#inc-send"); btn.disabled = true; btn.textContent = "Enviando…";
+  try {
+    await write("incidents/" + id, body); upsertLocal("incidents", { id, ...body });
+    if (svcId) { const sb = { status: "reprogramar", carId: null, order: null, zone: null }; await write("services/" + svcId, sb, "update"); const ls = S.services.find(x => x.id === svcId); if (ls) Object.assign(ls, sb); }
+    const before = new Map(dayServices(fecha).map(x => [x.id, x.carId]));
+    const r = await recalc(fecha, { quiet: true, keep: true });
+    const car = carById(carId);
+    const mine = [...before].filter(([, c]) => c === carId).map(([id]) => id);
+    const reasign = mine.filter(id => { const c = S.services.find(x => x.id === id)?.carId; return c && c !== carId; }).length;
+    const sinAuto = mine.filter(id => !S.services.find(x => x.id === id)?.carId && id !== svcId).length;
+    let msg = "Reporte enviado al despacho.";
+    if (impacto === "bloquea") msg += mine.length ? ` De ${car?.nombre}: ${reasign} servicio(s) pasaron a otros autos${sinAuto ? ` y ${sinAuto} quedaron sin auto (no caben en la jornada)` : ""}.` : ` ${car?.nombre} no tenía servicios pendientes por repartir.`;
+    if (impacto === "retraso") msg += ` Las horas de llegada de ${car?.nombre} se recorrieron ${body.retrasoMin} min.`;
+    if (impacto === "servicio") msg += " El servicio quedó marcado para reprogramar.";
+    if (impacto !== "bloquea" && r?.un) msg += ` Atención: ${r.un} servicio(s) del día siguen sin auto.`;
+    $("#inc-result").innerHTML = `<div class="notice">${esc(msg)}</div>`; toast(msg);
+    $("#inc-desc").value = ""; $("#inc-coords").value = "";
+  } catch (err) { dbErr(err); }
+  finally { btn.disabled = !S.canWrite; btn.textContent = "Enviar reporte y recalcular"; }
+});
+
+// Flota y reglas
+document.addEventListener("submit", async e => {
+  const f = e.target.closest("form[data-car]"); if (!f) return; e.preventDefault();
+  const id = f.dataset.car; const baseTxt = f.elements.base.value.trim(); const base = parseCoords(baseTxt);
+  if (baseTxt && !base) return toast("La base no tiene un formato válido. Usa «lat, lng».");
+  try { await write("cars/" + id, { nombre: f.elements.nombre.value.trim() || "Auto", placas: f.elements.placas.value.trim(), tripulacion: f.elements.tripulacion.value.trim(), base, activo: f.elements.activo.checked, radio: Math.min(MAX_RADIO, Math.max(0, +f.elements.radio.value || 0)) || null }, "update"); document.activeElement?.blur(); toast("Auto actualizado."); }
+  catch (err) { dbErr(err); }
+});
+function bonoHint() { const v = $("#cfg-bono").value; $("#cfg-bono-hint").textContent = v === "" ? "Monto en pesos mexicanos (MXN)." : `${money(v)} MXN`; }
+$("#cfg-bono").addEventListener("input", bonoHint);
+$("#cfg-form").addEventListener("submit", async e => {
+  e.preventDefault();
+  const radio = Math.min(MAX_RADIO, Math.max(1, +$("#cfg-radio").value || 5));
+  const body = { radio, cap: +$("#cfg-cap").value || DEFAULTS.cap, ini: $("#cfg-ini").value || DEFAULTS.ini, fin: $("#cfg-fin").value || DEFAULTS.fin, dur: +$("#cfg-dur").value || DEFAULTS.dur, vel: +$("#cfg-vel").value || DEFAULTS.vel, ciudad: $("#cfg-ciudad").value.trim(),
+    bonificacion: $("#cfg-bono").value === "" ? null : Math.max(0, Math.round(+$("#cfg-bono").value * 100) / 100),
+    p1ini: $("#cfg-p1ini").value || DEFAULTS.p1ini, p1fin: $("#cfg-p1fin").value || DEFAULTS.p1fin };
+  try { await write("config/main", body); document.activeElement?.blur(); toast("Reglas guardadas.", { label: "Recalcular hoy", run: () => recalc(S.day) }); } catch (err) { dbErr(err); }
+});
+$("#btn-clear-demo").onclick = async function () {
+  if (this.dataset.armed !== "1") { this.dataset.armed = "1"; this.textContent = "Confirmar: quitar ejemplos"; this.classList.add("danger"); setTimeout(() => { this.dataset.armed = ""; this.textContent = "Quitar datos de ejemplo"; this.classList.remove("danger"); }, 4000); return; }
+  this.dataset.armed = ""; this.textContent = "Quitar datos de ejemplo"; this.classList.remove("danger");
+  try { for (const s of S.services.filter(x => x.ejemplo)) await S.db.doc("services/" + s.id).delete(); for (const i of S.incidents.filter(x => x.ejemplo)) await S.db.doc("incidents/" + i.id).delete(); toast("Se quitaron los datos de ejemplo."); }
+  catch (err) { dbErr(err); }
+};
+
+// ---------- Arranque ----------
+setTab(S.tab); syncImpact(); coordsHint(); render();
+(async () => {
+  const note = $("#sysnote");
+  if (!window.claude?.use) { note.hidden = false; note.className = "notice bad"; note.textContent = "Abre esta página desde Claude para guardar y compartir los servicios."; return; }
+  const [db, user, sample, downloads] = await Promise.all([claude.use("db"), claude.use("user"), claude.use("sample"), claude.use("downloads")]);
+  sampleFn = sample; if (!sample) $("#btn-geo").hidden = true;
+  downloadsFn = downloads; $("#btn-export").hidden = !downloads;
+  if (!db) { note.hidden = false; note.className = "notice bad"; note.textContent = "Inicia sesión en Claude para ver y registrar servicios."; return; }
+  S.db = db;
+  try { S.isAdmin = !!(await user?.canEdit?.()); } catch (e) { S.isAdmin = false; }
+  $("#tab-monitoreo").hidden = !S.isAdmin; if (S.isAdmin && S.wantTab === "monitoreo") setTab("monitoreo");
+  try { const w = await user?.can?.("data.write"); if (w === false) { S.canWrite = false; note.hidden = false; note.textContent = "Tienes acceso de solo lectura. Pide acceso de colaborador para registrar servicios o reportar siniestros."; } } catch (e) {}
+  const onErr = e => { if (e?.code !== "revoked") console.error(e); note.hidden = false; note.className = "notice bad"; note.textContent = "Se perdió la conexión con los datos. Recarga la página."; };
+  const coll = (name, key, sortFn) => db.collection(name).onSnapshot(snap => { S[key] = snap.docs.map(d => ({ id: d.id, ...d.data() })); if (sortFn) S[key].sort(sortFn); S.loaded[key] = true; render(); }, onErr);
+  coll("cars", "cars", (a, b) => (a.n ?? 9) - (b.n ?? 9) || String(a.nombre).localeCompare(String(b.nombre)));
+  coll("services", "services");
+  coll("incidents", "incidents");
+  db.doc("config/main").onSnapshot(d => { S.cfg = { ...DEFAULTS, ...(d.exists ? d.data() : {}) }; render(); }, onErr);
+})();
+})();
+</script>
