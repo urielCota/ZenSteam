@@ -6,6 +6,7 @@
   const provider = String(cfg.provider || "").toLowerCase();
   const key = String(cfg.key || "");
   const enabled = !!key && !/TU_CLAVE/.test(key) && (provider === "google" || provider === "mapbox");
+  if (!enabled) console.warn("ZenSteam: ubicación automática desactivada.", { provider: provider || "(vacío)", clave: !key ? "vacía" : /TU_CLAVE/.test(key) ? "de ejemplo" : "ok", configCargado: !!window.ZS_CONFIG });
   const err = (code, message, cause) => Object.assign(new Error(message || code), { code, cause });
   const sleep = ms => new Promise(r => setTimeout(r, ms));
 
