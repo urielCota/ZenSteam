@@ -15,7 +15,7 @@
   function loadGoogle() {
     return gReady ||= new Promise((ok, bad) => {
       window.__zsGmReady = ok;
-      window.gm_authFailure = () => { gReady = null; GEO.enabled = false; bad(err("not_granted", "La clave de Google fue rechazada")); };
+      window.gm_authFailure = () => { gReady = null; document.querySelector('script[src*="maps.googleapis.com"]')?.remove(); bad(err("not_granted", "Google rechazó la clave (revisa que el sitio esté en «Websites», que Maps JavaScript API esté habilitada y que la facturación esté activa)")); };
       const s = document.createElement("script");
       s.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(key)}&v=weekly&loading=async&language=es&region=MX&callback=__zsGmReady`;
       s.async = true;
@@ -37,7 +37,7 @@
       const c = e?.code || String(e?.message || "").match(/[A-Z_]{6,}/)?.[0];
       if (c === "ZERO_RESULTS") return null;
       if (c === "OVER_QUERY_LIMIT") { if (retry) { await sleep(1500); return google_(address, { bias }, false); } throw err("rate_limited", "Límite de consultas de Google", e); }
-      if (c === "REQUEST_DENIED") throw err("not_granted", "Google rechazó la consulta (revisa la clave y que la Geocoding API esté habilitada)", e);
+      if (c === "REQUEST_DENIED") { console.warn("ZenSteam · Google Geocoding:", e?.message || e); throw err("not_granted", "Google indica que la Geocoding API no está habilitada para esta clave, o la clave no la permite en «API restrictions»", e); }
       throw err("unavailable", "Google no respondió", e);
     }
   }
