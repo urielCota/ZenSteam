@@ -11,6 +11,6 @@ window.ZS_CONFIG = {
   // Ubicación automática por dirección: "google" o "mapbox" (deja key vacía para desactivarla).
   geocoder: {
     provider: "google",
-    key: "TU_CLAVE_DE_GOOGLE_O_TOKEN_DE_MAPBOX"
+    key: "AIzaSyDxrXag7NaqWNPxZ1DlgrMWI976IhfVzmQ"
   }
 };
