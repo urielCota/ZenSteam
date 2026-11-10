@@ -88,6 +88,7 @@ nav.tabs button:focus-visible { outline: 2px solid var(--accent); outline-offset
 
 /* Controles */
 button, .btn { font: 600 .9rem var(--body); border-radius: var(--r); border: 1px solid var(--line); background: var(--surface); color: var(--fg); padding: 8px 14px; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+[hidden] { display: none !important; }
 button:hover, .btn:hover { border-color: var(--accent); }
 button:focus-visible, .btn:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
@@ -502,10 +503,10 @@ ul.feed li.bad { color: var(--bad); }
 <div class="toasts" id="toasts" aria-live="polite"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="config.js"></script>
-<script src="js/store.js"></script>
-<script src="js/geocoder.js"></script>
-<script src="js/auth.js"></script>
+<script>
+// Se piden siempre frescos: así un cambio en config.js o en js/ se ve al recargar, sin pelear con la caché del navegador.
+(v => ["config.js", "js/store.js", "js/geocoder.js", "js/auth.js"].forEach(f => document.write(`<script src="${f}?v=${v}"><\/script>`)))(Date.now());
+</script>
 <script>
 (() => {
 "use strict";
@@ -1502,7 +1503,7 @@ $("#btn-export").onclick = async () => {
 let sampleFn = null, geoCtl = null;
 $("#btn-geo").onclick = async () => {
   const dir = $("#svc-dir").value.trim(); if (!dir) { toast("Escribe primero la dirección."); $("#svc-dir").focus(); return; }
-  if (!sampleFn) { toast("La ubicación automática no está configurada. Pega las coordenadas desde Google Maps."); return; }
+  if (!sampleFn) { toast(window.ZSGeo ? "La ubicación automática no está configurada: revisa provider y key en config.js (si ya los cambiaste, recarga con Ctrl+F5)." : "No se cargó js/geocoder.js. Revisa que esté subido al sitio."); return; }
   const btn = $("#btn-geo"); btn.disabled = true; btn.textContent = "Ubicando…"; geoCtl = new AbortController();
   try {
     const r = await sampleFn.geocode(dir, { bias: geoBias(), signal: geoCtl.signal });
