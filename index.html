@@ -1424,7 +1424,7 @@ async function geoBatch(rows, onProgress) {
       const g = await sampleFn.geocode(r.data.direccion, { bias });
       if (g && g.lat > 14 && g.lat < 33 && g.lng > -119 && g.lng < -86) { r.data.lat = Math.round(g.lat * 1e6) / 1e6; r.data.lng = Math.round(g.lng * 1e6) / 1e6; r.data.coordFuente = g.confianza === "alta" ? "geo-exacta" : "geo"; ok++; }
     } catch (e) {
-      if (NOGEO.includes(e?.code)) { sampleFn = null; $("#btn-geo").hidden = true; toast("La ubicación automática fue rechazada: revisa la clave en config.js."); break; }
+      if (NOGEO.includes(e?.code)) { toast(geoDenied(e)); break; }
       if (e?.code === "rate_limited") { toast("Se alcanzó el límite de consultas de ubicación; las filas restantes quedan sin ubicación."); break; }
       // otro error: se sigue con la siguiente fila
     }
@@ -1501,6 +1501,7 @@ $("#btn-export").onclick = async () => {
 
 // Ubicar dirección (Google o Mapbox)
 let sampleFn = null, geoCtl = null;
+function geoDenied(e) { return `No se pudo ubicar: ${e?.message || "la clave fue rechazada"}. Puedes reintentar; en F12 → Consola aparece el motivo exacto.`; }
 $("#btn-geo").onclick = async () => {
   const dir = $("#svc-dir").value.trim(); if (!dir) { toast("Escribe primero la dirección."); $("#svc-dir").focus(); return; }
   if (!sampleFn) { toast(window.ZSGeo ? "La ubicación automática no está configurada: revisa provider y key en config.js (si ya los cambiaste, recarga con Ctrl+F5)." : "No se cargó js/geocoder.js. Revisa que esté subido al sitio."); return; }
@@ -1513,7 +1514,7 @@ $("#btn-geo").onclick = async () => {
     coordsHint();
     toast(r.confianza === "alta" ? `Ubicada: ${r.lugar}` : `Ubicación aproximada (${r.confianza}): ${r.lugar}. Verifícala en Google Maps antes de guardar.`);
   } catch (e) {
-    if (NOGEO.includes(e?.code)) { sampleFn = null; btn.hidden = true; toast("La ubicación automática fue rechazada: revisa la clave en config.js."); }
+    if (NOGEO.includes(e?.code)) toast(geoDenied(e));
     else if (e?.code === "rate_limited") toast("Demasiadas consultas. Intenta en un momento.");
     else if (e?.code !== "cancelled") toast("No se pudo ubicar ahora. Intenta de nuevo o pega las coordenadas.");
   } finally { btn.disabled = false; btn.textContent = "Ubicar dirección"; }
