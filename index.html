@@ -378,7 +378,7 @@ ul.feed li.bad { color: var(--bad); }
       <div class="panel stack" id="imp-panel">
         <div>
           <h2>Cargar desde Excel</h2>
-          <p class="small muted" style="margin:4px 0 0">Una fila por servicio, con encabezados en la primera fila. Obligatorias: <b>Cliente</b> y <b>Dirección</b> (o Zona). Opcionales: Teléfono, Referencias, Fecha, Día, Hora, Duración (min), Monto, Descripción (o Servicio), Forma de pago, Ubicación, Notas.<br><b>Fecha</b>: dd/mm/aaaa, fecha de Excel o «17 de agosto»; si no trae año, se toma el que coincide con la columna Día. Si una fila no trae fecha, se usa el día elegido en la lista. <b>Si el servicio ya existe</b> (mismo cliente y fecha), se actualizan solo los datos que cambiaron; las celdas vacías no borran lo capturado.<br><b>Ubicación</b>: coordenadas «19.4326, -99.1332» o enlace largo de Google Maps que las incluya (se detecta la columna aunque tenga otro nombre). Si la fila no trae coordenadas (por ejemplo, un enlace corto maps.app.goo.gl), <b>se calcula a partir de la dirección</b> (Google o Mapbox) al importar; queda marcada como ubicación aproximada para que la revises.</p>
+          <p class="small muted" style="margin:4px 0 0">Una fila por servicio, con encabezados en la primera fila. Obligatorias: <b>Cliente</b> y <b>Dirección</b> (o Zona). Opcionales: Teléfono, Referencias, Fecha, Día, Hora, Duración (min), Monto, Descripción (o Servicio), Forma de pago, Ubicación, Notas, <b>Auto</b>.<br><b>Auto</b>: nombre del auto («Auto 2»), sus placas o su número; el servicio queda asignado a ese auto como asignación manual. Si viene vacía o el auto no existe, se asigna automáticamente.<br><b>Fecha</b>: dd/mm/aaaa, fecha de Excel o «17 de agosto»; si no trae año, se toma el que coincide con la columna Día. Si una fila no trae fecha, se usa el día elegido en la lista. <b>Si el servicio ya existe</b> (mismo cliente y fecha), se actualizan solo los datos que cambiaron; las celdas vacías no borran lo capturado.<br><b>Ubicación</b>: coordenadas «19.4326, -99.1332» o enlace largo de Google Maps que las incluya (se detecta la columna aunque tenga otro nombre). Si la fila no trae coordenadas (por ejemplo, un enlace corto maps.app.goo.gl), <b>se calcula a partir de la dirección</b> (Google o Mapbox) al importar; queda marcada como ubicación aproximada para que la revises.</p>
         </div>
         <label>Archivo (.xlsx, .xls o .csv)<input type="file" id="imp-file" accept=".xlsx,.xls,.csv,.ods"></label>
         <div id="imp-preview"></div>
@@ -1276,8 +1276,15 @@ const IMP_COLS = {
   notas: ["notas", "nota", "observaciones", "comentarios"],
   descripcion: ["descripcion", "descripciondelservicio", "servicio", "tipodeservicio", "tiposervicio", "tipodelimpieza", "detalle"],
   formaPago: ["formadepago", "formadpago", "formapago", "pago", "metododepago", "metodopago", "mediodepago"],
-  monto: ["monto", "precio", "importe", "costo", "total", "cobro", "tarifa", "montomxn"]
+  monto: ["monto", "precio", "importe", "costo", "total", "cobro", "tarifa", "montomxn"],
+  auto: ["auto", "unidad", "vehiculo", "carro", "coche", "camioneta", "autoasignado", "asignadoa", "asignacion", "asignaciondeauto"]
 };
+// Auto del archivo: por nombre («Auto 2», «Negro»), por placas o por número («2»). Devuelve el auto o null.
+function impCar(v) {
+  const k = normKey(v); if (!k) return null;
+  return S.cars.find(c => normKey(c.nombre) === k) || S.cars.find(c => c.placas && normKey(c.placas) === k)
+    || (/^(auto|unidad)?\d+$/.test(k) ? S.cars.find(c => normKey(c.nombre) === "auto" + k.replace(/\D/g, "")) || S.cars.find(c => String(c.n) === k.replace(/\D/g, "")) : null) || null;
+}
 const MESES = { ene: 1, feb: 2, mar: 3, abr: 4, may: 5, jun: 6, jul: 7, ago: 8, sep: 9, set: 9, oct: 10, nov: 11, dic: 12 };
 const DOW = ["domingo", "lunes", "martes", "miercoles", "jueves", "viernes", "sabado"];
 // Sin año: el año (actual, siguiente o anterior) en que ese día cae en el día de la semana indicado.
@@ -1353,8 +1360,10 @@ async function readImport(file) {
     if (!loc && txt("coords") && !short) errs.push("ubicación no válida");
     const duracion = Math.round(+String(g("duracion")).replace(/[^\d.]/g, "")) || null;
     const monto = impMoney(g("monto")); if (monto === undefined) warns.push("monto no válido (se deja vacío)");
+    const autoTxt = txt("auto"), car = impCar(autoTxt);
+    if (autoTxt && !car) warns.push(`no existe el auto «${autoTxt}» (se asignará automáticamente)`);
     const data = { cliente, telefono: txt("telefono"), direccion, referencias: txt("referencias"), fecha, hora: hora || "", duracion, monto: monto ?? null, notas: txt("notas"), descripcion: txt("descripcion"), formaPago: txt("formaPago"), lat: loc ? loc.lat : null, lng: loc ? loc.lng : null, coordFuente: loc ? "manual" : null };
-    const row = { fila: top + hi + j + 2, errs, warns, short, kind: "new", dup: false, data };
+    const row = { fila: top + hi + j + 2, errs, warns, short, kind: "new", dup: false, data, carId: car?.id || null };
     if (!errs.length) {
       const cands = (byKey.get(normKey(cliente) + "|" + fecha) || []).filter(s => !taken.has(s.id));
       const match = cands.length === 1 ? cands[0] : cands.find(s => normKey(s.direccion) === normKey(direccion) || (loc && hasLoc(s) && hav(loc, s) < 0.05)) || null;
@@ -1366,6 +1375,7 @@ async function readImport(file) {
         if (has("duracion") && duracion && (match.duracion ?? null) !== duracion) ch.duracion = duracion;
         if (has("monto") && monto != null && (match.monto ?? null) !== monto) ch.monto = monto;
         if (loc && (!hasLoc(match) || hav(loc, match) > 0.03)) Object.assign(ch, { lat: loc.lat, lng: loc.lng, coordFuente: "manual" });
+        if (car && (match.carId !== car.id || !match.manual) && !["completado", "cancelado"].includes(match.status)) Object.assign(ch, { carId: car.id, manual: true, order: null, zone: null, zoneLat: null, zoneLng: null, fueraRadio: null, ...(match.status === "reprogramar" ? { status: "pendiente" } : {}) });
         Object.assign(row, { kind: Object.keys(ch).length ? "update" : "same", target: match.id, changes: ch, targetHasLoc: hasLoc(match) });
       } else {
         const key = dupKey(cliente, placeKey(loc, direccion), fecha);
@@ -1387,7 +1397,7 @@ function impMoney(v) {
   const n = parseFloat(t); return Number.isFinite(n) && n >= 0 ? Math.round(n * 100) / 100 : undefined;
 }
 const impReady = () => IMP.rows.filter(r => !r.errs.length && !r.dup && !r.done && (r.kind === "new" || r.kind === "update"));
-const CH_LABEL = { direccion: "dirección", telefono: "teléfono", referencias: "referencias", notas: "notas", descripcion: "descripción", formaPago: "forma de pago", hora: "hora", duracion: "duración", monto: "monto", lat: "ubicación" };
+const CH_LABEL = { direccion: "dirección", telefono: "teléfono", referencias: "referencias", notas: "notas", descripcion: "descripción", formaPago: "forma de pago", hora: "hora", duracion: "duración", monto: "monto", lat: "ubicación", carId: "auto" };
 const chList = r => Object.keys(r.changes || {}).filter(k => CH_LABEL[k]).map(k => CH_LABEL[k]);
 // Sin coordenadas y con dirección: lo nuevo, o lo que se actualiza y aún no tiene ubicación.
 const needsGeo = r => r.data.lat == null && r.data.direccion && (r.kind === "new" || (r.kind === "update" && !r.targetHasLoc));
@@ -1404,6 +1414,7 @@ function renderImport() {
     : r.dup ? `<span class="chip zone">Repetido en el archivo</span>`
     : r.kind === "same" ? `<span class="chip zone">Sin cambios</span>`
     : (r.kind === "update" ? `<span class="chip en_curso">Actualizar: ${esc(chList(r).join(", "))}</span>` : `<span class="chip pendiente">Nuevo</span>`)
+      + (r.carId ? ` <span class="chip" style="background:color-mix(in srgb, ${carColor(carById(r.carId))} 16%, transparent);color:var(--fg)"><i class="dot" style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${carColor(carById(r.carId))}"></i>${esc(carById(r.carId)?.nombre || "")}</span>` : "")
       + (needsGeo(r) && sampleFn ? ' <span class="chip approx">Se ubicará automáticamente</span>' : r.kind === "new" && r.data.lat == null ? ' <span class="chip approx">Sin ubicación</span>' : "")
       + (r.warns || []).map(w => ` <span class="chip approx">${esc(w)}</span>`).join("");
   const shown = IMP.rows.slice(0, 150);
@@ -1460,11 +1471,11 @@ $("#imp-go").onclick = async () => {
         if (!body.lat && r.data.lat != null && !hasLoc(cur)) Object.assign(body, { lat: r.data.lat, lng: r.data.lng, coordFuente: r.data.coordFuente }); // ubicada automáticamente
         if (!Object.keys(body).length) continue;
         // Si cambió la ubicación de un servicio que no ha empezado, se vuelve a asignar (salvo si se asignó a mano).
-        if ("lat" in body && cur.status === "pendiente" && !cur.manual) Object.assign(body, { carId: null, order: null, zone: null, zoneLat: null, zoneLng: null, fueraRadio: null });
+        if ("lat" in body && cur.status === "pendiente" && !cur.manual && !body.manual) Object.assign(body, { carId: null, order: null, zone: null, zoneLat: null, zoneLng: null, fueraRadio: null });
         await write("services/" + cur.id, body, "update"); Object.assign(cur, body); r.done = true; dates.add(cur.fecha); updated++;
       } else {
         const id = "s" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-        const body = { ...r.data, status: "pendiente", carId: null, order: null, zone: null, zoneLat: null, zoneLng: null, creado: new Date().toISOString(), ejemplo: false, origen: "excel" };
+        const body = { ...r.data, status: "pendiente", carId: r.carId || null, manual: r.carId ? true : null, order: null, zone: null, zoneLat: null, zoneLng: null, creado: new Date().toISOString(), ejemplo: false, origen: "excel" };
         await write("services/" + id, body); upsertLocal("services", { id, ...body }); r.done = true; dates.add(body.fecha); added++;
       }
     }
